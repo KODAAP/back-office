@@ -1,5 +1,6 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
 from core_apps.projects.models import Projects
 from core_apps.projects.services import assign_project_permission
 
@@ -11,10 +12,6 @@ def assign_creator_permissions(sender, instance, created, **kwargs):
     """
     if created and instance.created_by:
         try:
-            assign_project_permission(
-                instance.created_by,
-                instance,
-                'manage'
-            )
+            assign_project_permission(instance.created_by, instance, "manage")
         except Exception as e:
             print(f"Error assigning permissions to creator: {e}")

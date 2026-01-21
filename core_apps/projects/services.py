@@ -1,23 +1,29 @@
-from django.core.exceptions import PermissionDenied
-from guardian.shortcuts import assign_perm, remove_perm, get_users_with_perms
-
-from core_apps.projects.models import Projects
 from django.contrib.auth import get_user_model
+from django.core.exceptions import PermissionDenied
+
+from guardian.shortcuts import assign_perm, get_users_with_perms, remove_perm
+
+from core_apps.common.permissions_config import (
+    ADMIN_ROLES,
+    PERMISSION_SETS,
+    ROLE_ALLOWED_LEVELS,
+)
 from core_apps.profiles.models import Profile
-from core_apps.common.permissions_config import PERMISSION_SETS, ADMIN_ROLES, ROLE_ALLOWED_LEVELS
+from core_apps.projects.models import Projects
 
 User = get_user_model()
 
+
 def can_assign_project_permissions(actor, project) -> bool:
     # Bypass rôles admin/manager
-    role = getattr(getattr(actor, 'profile', None), 'odk_role', None)
+    role = getattr(getattr(actor, "profile", None), "odk_role", None)
     if role in ADMIN_ROLES:
         return True
     # Permission objet OU permission modèle (globale) `manage_project`
-    return (
-        actor.has_perm('projects.manage_project', project) or
-        actor.has_perm('projects.manage_project')
+    return actor.has_perm("projects.manage_project", project) or actor.has_perm(
+        "projects.manage_project"
     )
+
 
 def assign_project_permission(user, project, permission_level):
     """
@@ -76,9 +82,7 @@ def revoke_project_permissions(user, project):
 def get_project_users_with_permissions(project):
     """Retourner tous les utilisateurs avec leurs permissions pour un projet."""
     users_with_perms = get_users_with_perms(
-        project,
-        attach_perms=True,
-        with_group_users=False
+        project, attach_perms=True, with_group_users=False
     )
     return users_with_perms
 
@@ -89,10 +93,10 @@ def get_user_permission_level(user, project):
     Retourne le niveau le plus élevé accordé.
     """
     if user.profile.odk_role in ADMIN_ROLES:
-        return 'manage'
+        return "manage"
 
     # Vérifier du niveau le plus élevé au plus bas
-    for level in ['manage', 'contribute', 'submit', 'read']:
+    for level in ["manage", "contribute", "submit", "read"]:
         perms = PERMISSION_SETS[level]
         app_label = Projects._meta.app_label
         if all(user.has_perm(f"{app_label}.{perm}", project) for perm in perms):

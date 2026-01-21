@@ -202,8 +202,10 @@ class BaseODKService:
                         f"ODK Central server error ({status_code}). Please try again later."
                     )
 
-                # Créer une exception personnalisée avec les détails
-                raise ODKValidationError(str(e), error_detail=error_detail)
+                # Créer une exception personnalisée avec les détails et le status_code
+                raise ODKValidationError(
+                    str(e), error_detail=error_detail, status_code=status_code
+                )
             except json.JSONDecodeError as e:
                 logger.error(f"JSON decoding error: {e}")
                 raise Exception("ODK Central server returned an invalid response.")

@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.db import models
 from django.utils import timezone
-from django.contrib.auth.models import Permission
+
 from core_apps.common.models import TimeStampedModel
 
 User = get_user_model()

@@ -1,12 +1,16 @@
 import logging
+
 from django.http import HttpResponse
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from core_apps.common.renderers import GenericJSONRenderer
 from core_apps.odk.services import ODKCentralService
 from core_apps.odk.services.exceptions import ODKValidationError
 from core_apps.projects.models import Projects
+
 from ..cache import ODKCacheManager
 
 logger = logging.getLogger(__name__)
@@ -79,7 +83,7 @@ class FormDraftView(APIView):
             )
 
         form_data = form_file.read()
-        ignore_warnings = request.query_params.get("ignore_warnings", "false") == "true"
+        ignore_warnings = request.query_params.get("ignore_warnings", "true")
 
         try:
             with ODKCentralService(request.user, request=request) as odk_service:
@@ -97,6 +101,15 @@ class FormDraftView(APIView):
                     filename,
                     ignore_warnings=ignore_warnings,
                 )
+                # the draft form must be published with a version after creation if there is no error
+                if not draft.get("publishedAt"):
+                    versions = odk_service.get_form_versions(odk_project_id, form_id)
+                    if versions:
+                        max_ver = max(float(v["version"]) for v in versions)
+                        next_version = f"{max_ver + 0.1:.1f}"  # e.g. "1.1" → "1.2"
+                    else:
+                        next_version = "1"
+                    odk_service.publish_draft(odk_project_id, form_id, next_version)
 
                 ODKCacheManager.invalidate_project_cache(
                     request.user.id, odk_project_id

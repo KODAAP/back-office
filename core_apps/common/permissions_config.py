@@ -2,49 +2,40 @@ from typing import Dict, Set
 
 # Mapping hiérarchique des niveaux de permissions
 PERMISSION_SETS: Dict[str, Set[str]] = {
-    'read': {
-        'access_project',
-        'view_form',
-        'view_submission'
+    "read": {"access_project", "view_form", "view_submission"},
+    "submit": {"access_project", "view_form", "view_submission", "add_submission"},
+    "contribute": {
+        "access_project",
+        "view_form",
+        "view_submission",
+        "add_submission",
+        "edit_submission",
+        "create_form",
+        "edit_form",
     },
-    'submit': {
-        'access_project',
-        'view_form',
-        'view_submission',
-        'add_submission'
+    "manage": {
+        "access_project",
+        "view_form",
+        "view_submission",
+        "add_submission",
+        "edit_submission",
+        "create_form",
+        "edit_form",
+        "manage_project",
+        "archive_project",
+        "restore_project",
+        "delete_form",
+        "delete_submission",
     },
-    'contribute': {
-        'access_project',
-        'view_form',
-        'view_submission',
-        'add_submission',
-        'edit_submission',
-        'create_form',
-        'edit_form'
-    },
-    'manage': {
-        'access_project',
-        'view_form',
-        'view_submission',
-        'add_submission',
-        'edit_submission',
-        'create_form',
-        'edit_form',
-        'manage_project',
-        'archive_project',
-        'restore_project',
-        'delete_form',
-        'delete_submission'
-    }
 }
 
 # Rôles avec accès global (bypass des permissions granulaires)
-ADMIN_ROLES = ['administrator', 'manager']
+ADMIN_ROLES = ["administrator", "manager"]
 
 # Mapping des rôles ODK vers les niveaux de permissions autorisés
 ROLE_ALLOWED_LEVELS = {
-    'administrator': ['read', 'submit', 'contribute', 'manage'],
-    'manager': ['read', 'submit', 'contribute', 'manage'],
-    'insuco_user': ['read', 'submit', 'contribute'],
-    'data_collector': ['read', 'submit'],
+    "administrator": ["read", "submit", "contribute", "manage"],
+    "manager": ["read", "submit", "contribute", "manage"],
+    "insuco_user": ["read", "submit", "contribute"],
+    "data_collector": ["read", "submit"],
 }

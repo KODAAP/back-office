@@ -1,10 +1,14 @@
 import logging
+
 from django.core.cache import cache
 from django.utils import timezone
+
 logger = logging.getLogger(__name__)
+
 
 class ODKCacheManager:
     """Gestionnaire de cache pour les données ODK"""
+
     # Préfixe pour toutes les clés de cache ODK
     CACHE_PREFIX = "odk_"
     # Durées de cache par défaut (en secondes)
@@ -36,7 +40,7 @@ class ODKCacheManager:
         )
 
     @staticmethod
-    def get_cached_user_projects(user_id: int) :
+    def get_cached_user_projects(user_id: int):
         """Récupère les projets en cache"""
         cache_key = ODKCacheManager.get_cache_key(user_id, "projects")
         cached_data = cache.get(cache_key)
@@ -50,7 +54,7 @@ class ODKCacheManager:
 
     @staticmethod
     def cache_project_forms(
-        user_id: int, project_id: int|str, forms: list, timeout: int = None
+        user_id: int, project_id: int | str, forms: list, timeout: int = None
     ) -> None:
         """Met en cache les formulaires d'un projet"""
         cache_key = ODKCacheManager.get_cache_key(user_id, "forms", project_id)
@@ -65,7 +69,7 @@ class ODKCacheManager:
         )
 
     @staticmethod
-    def get_cached_project_forms(user_id: int, project_id: int|str) :
+    def get_cached_project_forms(user_id: int, project_id: int | str):
         """Récupère les formulaires en cache"""
         cache_key = ODKCacheManager.get_cache_key(user_id, "forms", project_id)
         cached_data = cache.get(cache_key)
@@ -107,9 +111,7 @@ class ODKCacheManager:
         )
 
     @staticmethod
-    def get_cached_form_submissions(
-        user_id: int, project_id: int, form_id: str
-    ):
+    def get_cached_form_submissions(user_id: int, project_id: int, form_id: str):
         """Récupère les soumissions en cache"""
         cache_key = ODKCacheManager.get_cache_key(
             user_id, "submissions", f"{project_id}/{form_id}"
@@ -127,7 +129,6 @@ class ODKCacheManager:
         )
         return None
 
-
     @staticmethod
     def invalidate_user_cache(user_id: int) -> None:
         """Invalide tout le cache d'un utilisateur"""
@@ -138,7 +139,7 @@ class ODKCacheManager:
         logger.info(f"Cache ODK invalidé pour l'utilisateur {user_id}")
 
     @staticmethod
-    def invalidate_project_cache(user_id: int, project_id: int|str) -> None:
+    def invalidate_project_cache(user_id: int, project_id: int | str) -> None:
         """Invalide le cache d'un projet spécifique"""
         # Clé pour les formulaires du projet
         forms_key = ODKCacheManager.get_cache_key(user_id, "forms", project_id)

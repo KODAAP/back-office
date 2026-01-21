@@ -2,6 +2,7 @@ import logging
 from typing import Optional
 
 from django.conf import settings
+from django.core.mail import send_mail
 
 from djoser.social.views import ProviderAuthView
 from rest_framework import status
@@ -12,6 +13,26 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 logger = logging.getLogger(__name__)
+
+
+def send_welcome_email(user):
+    if not settings.DEBUG:  # Production only
+        try:
+            send_mail(
+                subject="Welcome on Sycosur !",
+                message=f"""
+                Hello {user.get_full_name()},
+                Thank you for registering via your OAuth account.
+                You can now access all Sycosur features.
+                The Sycosur team
+                """,
+                from_email="sycosur@insuco.com",
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+            logger.info(f"Welcome email sent to {user.email}")
+        except Exception as e:
+            logger.error(f"Error sending email to {user.email}: {e}")
 
 
 def set_auth_cookies(
@@ -103,6 +124,7 @@ class CustomTokenRefreshView(TokenRefreshView):
 
 class CustomProviderAuthView(ProviderAuthView):
     permission_classes = AllowAny
+
     def post(self, request: Request, *args, **kwargs) -> Response:
         provider_res = super().post(request, *args, **kwargs)
 
@@ -116,10 +138,11 @@ class CustomProviderAuthView(ProviderAuthView):
                     access_token=access_token,
                     refresh_token=refresh_token,
                 )
+                send_welcome_email(request.user)
                 provider_res.data.pop("access", None)
                 provider_res.data.pop("refresh", None)
-
                 provider_res.data["message"] = "You are logged in Successful."
+
             else:
                 provider_res.data["message"] = (
                     "Access or refresh token not found in provider response"

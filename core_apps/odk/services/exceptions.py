@@ -12,9 +12,10 @@ logger = logging.getLogger(__name__)
 class ODKValidationError(Exception):
     """Exception levée lors d'erreurs de validation ODK"""
 
-    def __init__(self, message, error_detail=None):
+    def __init__(self, message, error_detail=None, status_code=None):
         super().__init__(message)
         self.error_detail = error_detail
+        self.status_code = status_code
 
     def parse_python_literal(self, py_str: str):
         """
@@ -35,11 +36,7 @@ class ODKValidationError(Exception):
         """
         Extraire et structurer les messages en format compact {message, error, warnings}.
         """
-        validations = {
-            "message": None,
-            "error": None,
-            "warnings": []
-        }
+        validations = {"message": None, "error": None, "warnings": []}
 
         raw_messages = []
         if self.error_detail:
@@ -62,11 +59,18 @@ class ODKValidationError(Exception):
             parsed = self.parse_python_literal(raw_messages[1])
             if parsed:
                 if "error" in parsed and parsed["error"]:
-                    validations["error"] = parsed["error"] if isinstance(parsed["error"], str) else str(parsed["error"])
+                    validations["error"] = (
+                        parsed["error"]
+                        if isinstance(parsed["error"], str)
+                        else str(parsed["error"])
+                    )
 
                 if "warnings" in parsed and parsed["warnings"]:
                     warnings_obj = parsed["warnings"]
-                    if isinstance(warnings_obj, dict) and "xlsFormWarnings" in warnings_obj:
+                    if (
+                        isinstance(warnings_obj, dict)
+                        and "xlsFormWarnings" in warnings_obj
+                    ):
                         validations["warnings"] = warnings_obj["xlsFormWarnings"]
                     elif isinstance(warnings_obj, list):
                         validations["warnings"] = warnings_obj
@@ -84,8 +88,15 @@ class ODKValidationError(Exception):
 
         response_data = {
             "error": error_message,
-            "details": str(self),  # Renommé de 'detail' à 'details' pour matcher ta demande
+            "details": str(
+                self
+            ),  # Renommé de 'detail' à 'details' pour matcher ta demande
             "validations": validations,
         }
 
-        return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+        # Use the stored status_code if available, otherwise default to 400
+        http_status = (
+            self.status_code if self.status_code else status.HTTP_400_BAD_REQUEST
+        )
+
+        return Response(response_data, status=http_status)

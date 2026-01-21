@@ -3,6 +3,7 @@ import logging
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from core_apps.common.renderers import GenericJSONRenderer
 from core_apps.odk.mixins import ProjectValidationMixin
 from core_apps.odk.serializers import PublicLinkCreateSerializer
@@ -13,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 class CreateListAccessView(ProjectValidationMixin, APIView):
     """Handles creation and listing of public access links for ODK forms"""
+
     renderer_classes = [
         GenericJSONRenderer,
     ]
@@ -86,6 +88,7 @@ class CreateListAccessView(ProjectValidationMixin, APIView):
 
 class RevokeAccessLinkView(APIView):
     """Handles revocation of a specific public access link for ODK forms"""
+
     def delete(self, request, token):
         try:
             with ODKCentralService(request.user, request=request) as odk_service:

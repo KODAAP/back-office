@@ -1,6 +1,8 @@
 import logging
 from typing import Any, Optional
+
 logger = logging.getLogger(__name__)
+
 
 def get_client_ip(request) -> Optional[str]:
     """Extract the client IP address from a Django request.
@@ -53,5 +55,3 @@ def log_audit_action(
         if raise_on_error:
             raise
         return None
-
-

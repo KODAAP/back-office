@@ -1,9 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+
 from core_apps.common.models import TimeStampedModel
 
 User = get_user_model()
+
 
 class Projects(TimeStampedModel):
     odk_id = models.BigIntegerField(
@@ -47,6 +49,6 @@ class Projects(TimeStampedModel):
             ("edit_submission", "Can edit submission"),
             ("delete_submission", "Can delete submission"),
         ]
+
     def __str__(self) -> str:
         return self.name
-

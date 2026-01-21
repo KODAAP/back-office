@@ -1,6 +1,8 @@
 import logging
 from typing import Dict, List
+
 from django.utils import timezone
+
 from .baseService import BaseODKService
 
 logger = logging.getLogger(__name__)
@@ -36,23 +38,11 @@ class ODKProjectService(BaseODKService):
             odk_project = self.create_project(
                 name=project_data["name"], description=project_data["description"]
             )
-            logger.info("ODK project ID: %s", odk_project["id"])
+            logger.info("ODK project created with ID: %s", odk_project["id"])
             # Update the Django project with the ODK project ID
             django_project.odk_id = odk_project["id"]
             django_project.last_sync = timezone.now()
             django_project.save()
-
-            self._log_action(
-                "link_django_project_to_odk",
-                "project",
-                str(django_project.odk_id),
-                {
-                    "django_project_id": django_project.pkid,
-                    "odk_account": self.current_account["id"],
-                    "odk_project_id": django_project.odk_id,
-                },
-                success=True,
-            )
 
             return django_project.odk_id
 
@@ -91,8 +81,6 @@ class ODKProjectService(BaseODKService):
                 success=False,
             )
             raise
-
-
 
     def get_project(self, project_id: int) -> Dict:
         """Récupère un projet spécifique depuis ODK Central"""

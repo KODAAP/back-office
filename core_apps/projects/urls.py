@@ -4,8 +4,11 @@ from core_apps.projects.views import (
     ProjectArchiveView,
     ProjectDetailView,
     ProjectListCreateView,
+    ProjectPermissionAssignView,
+    ProjectPermissionListView,
+    ProjectPermissionRevokeView,
     ProjectRestoreView,
-    ProjectUnarchiveView, ProjectPermissionListView, ProjectPermissionRevokeView, ProjectPermissionAssignView,
+    ProjectUnarchiveView,
 )
 
 app_name = "projects"
@@ -19,11 +22,18 @@ urlpatterns = [
     ),
     path("<int:pk>/restore/", ProjectRestoreView.as_view(), name="project-restore"),
     path(
-        "<int:pkid>/permissions/", ProjectPermissionListView.as_view(), name="list-permissions"
+        "<int:pkid>/permissions/",
+        ProjectPermissionListView.as_view(),
+        name="list-permissions",
     ),
-    path("<int:pkid>/permissions/assign/", ProjectPermissionAssignView.as_view(), name="assign-permission"
-         ),
-    path("<int:pkid>/permissions/<uuid:user_id>/revoke/", ProjectPermissionRevokeView.as_view(),
-         name="revoke-permission"
-         ),
+    path(
+        "<int:pkid>/permissions/assign/",
+        ProjectPermissionAssignView.as_view(),
+        name="assign-permission",
+    ),
+    path(
+        "<int:pkid>/permissions/<uuid:user_id>/revoke/",
+        ProjectPermissionRevokeView.as_view(),
+        name="revoke-permission",
+    ),
 ]

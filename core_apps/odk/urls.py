@@ -21,8 +21,8 @@ from core_apps.odk.views import (
     MatrixView,
     ODKProjectListView,
     ProjectFormsListView,
+    RevokeAccessLinkView,
     SubmissionsDataView,
-    RevokeAccessLinkView
 )
 
 app_name = "odk"
@@ -142,7 +142,6 @@ urlpatterns = [
         FormVersionXMLView.as_view(),
         name="form-version-xml",
     ),
-
     # Public access to form definition
     path(
         "projects/<int:project_id>/forms/<str:form_id>/public-links/",
@@ -152,7 +151,6 @@ urlpatterns = [
     path(
         "public-links/<str:token>/revoke/",
         RevokeAccessLinkView.as_view(),
-        name="revoke-public-link"
+        name="revoke-public-link",
     ),
-
 ]

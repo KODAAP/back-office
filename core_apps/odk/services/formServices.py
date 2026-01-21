@@ -1,5 +1,8 @@
 import logging
 from typing import Dict, List
+
+from httplib2.auth import params
+
 from .baseService import BaseODKService
 from .exceptions import ODKValidationError
 
@@ -204,7 +207,7 @@ class ODKFormService(BaseODKService):
         form_id: str,
         form_data,
         filename: str,
-        ignore_warnings: bool = False,
+        ignore_warnings: bool = True,
     ) -> Dict:
         """Create or update a form draft"""
         try:

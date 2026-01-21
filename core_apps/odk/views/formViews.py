@@ -5,9 +5,10 @@ from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from core_apps.odk.services.exceptions import ODKValidationError
+
 from core_apps.common.renderers import GenericJSONRenderer
 from core_apps.odk.services import ODKCentralService
+from core_apps.odk.services.exceptions import ODKValidationError
 from core_apps.projects.models import Projects
 
 from ..cache import ODKCacheManager
@@ -169,7 +170,11 @@ class ProjectFormsListView(APIView):
                         if form.get("publishedAt") is None:
                             form["submissions"] = 0
                         else:
-                            form["submissions"]= len(odk_service.get_form_submissions(django_project.odk_id, form["xmlFormId"]))
+                            form["submissions"] = len(
+                                odk_service.get_form_submissions(
+                                    django_project.odk_id, form["xmlFormId"]
+                                )
+                            )
                     return Response(
                         {"count": len(forms), "forms": forms}, status=status.HTTP_200_OK
                     )

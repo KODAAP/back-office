@@ -1,8 +1,10 @@
-from rest_framework import serializers
-from .models import  Projects
-from rest_framework import serializers
 from django.contrib.auth import get_user_model
+
+from rest_framework import serializers
+
 from core_apps.common.permissions_config import PERMISSION_SETS
+
+from .models import Projects
 
 User = get_user_model()
 
@@ -47,10 +49,9 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 class AssignProjectPermissionSerializer(serializers.Serializer):
     """Serializer pour assigner des permissions à un utilisateur."""
+
     user_id = serializers.UUIDField()
-    permission_level = serializers.ChoiceField(
-        choices=list(PERMISSION_SETS.keys())
-    )
+    permission_level = serializers.ChoiceField(choices=list(PERMISSION_SETS.keys()))
 
     def validate_user_id(self, value):
         if not User.objects.filter(id=value).exists():
@@ -60,16 +61,18 @@ class AssignProjectPermissionSerializer(serializers.Serializer):
 
 class ProjectPermissionUserSerializer(serializers.ModelSerializer):
     """Serializer pour afficher un utilisateur avec ses permissions."""
-    full_name = serializers.ReadOnlyField(source='get_full_name')
+
+    full_name = serializers.ReadOnlyField(source="get_full_name")
     permission_level = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'full_name', 'permission_level']
+        fields = ["id", "email", "full_name", "permission_level"]
 
     def get_permission_level(self, obj):
-        project = self.context.get('project')
+        project = self.context.get("project")
         if project:
             from core_apps.projects.services import get_user_permission_level
+
             return get_user_permission_level(obj, project)
         return None
