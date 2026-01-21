@@ -56,6 +56,9 @@ EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
 EMAIL_HOST = getenv("EMAIL_HOST")
 EMAIL_PORT = getenv("EMAIL_PORT")
 DEFAULT_FROM_EMAIL = getenv("DEFAULT_FROM_EMAIL")
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = getenv("DEFAULT_FROM_EMAIL")
+EMAIL_HOST_PASSWORD = getenv("EMAIL_PASS")
 DOMAIN = getenv("DOMAIN")
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"

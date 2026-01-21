@@ -1,7 +1,9 @@
 from datetime import timedelta
 from os import getenv, path
 from pathlib import Path
+
 from dotenv import load_dotenv
+
 from config.env import CUR_ENV_FILE
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -243,7 +245,7 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_THROTTLE_RATES": {
         "anon": "200/day",
-        "user": "1000000/day",
+        "user": "1000/day",
     },
     # 'DEFAULT_RENDERER_CLASSES': [
     #     'core_apps.common.renderers.GenericJSONRenderer',
@@ -323,7 +325,7 @@ ODK_ADMIN_EMAIL2 = getenv("ODK_ADMIN_EMAIL2")
 ODK_ADMIN_PASSWORD2 = getenv("ODK_ADMIN_PASSWORD2")
 
 # Guardian settings
-ANONYMOUS_USER_NAME = 'AnonymousUser'
+ANONYMOUS_USER_NAME = "AnonymousUser"
 GUARDIAN_RENDER_403 = True  # Page d'erreur personnalisable
 
 # DJANGO_ODATA = {
