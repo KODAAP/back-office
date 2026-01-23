@@ -3,7 +3,6 @@ from typing import Optional
 
 from django.conf import settings
 from django.core.mail import send_mail
-
 from djoser.social.views import ProviderAuthView
 from rest_framework import status
 from rest_framework.permissions import AllowAny

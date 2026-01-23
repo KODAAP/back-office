@@ -47,7 +47,7 @@ class ProfileListAPIView(generics.ListAPIView):
     # search_fields = ["user__first_name", "user__last_name"]
     # filterset_fields = ["odk_role", "gender", "country_of_origin"]
 
-    def get_queryset(self) -> List[Profile]:
+    def get_queryset(self) ->  QuerySet[Profile]:
         return (
             Profile.objects.exclude(user__is_staff=True).exclude(
                 user__is_superuser=True

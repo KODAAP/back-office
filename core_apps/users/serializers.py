@@ -9,14 +9,14 @@ User = get_user_model()
 
 
 class UserPermissionsSerializer(serializers.Serializer):
-    """Serializer pour exposer les permissions de l'utilisateur."""
+    """Serializer to expose user permissions."""
 
     is_admin = serializers.SerializerMethodField()
+    globals = serializers.SerializerMethodField()
     projects = serializers.SerializerMethodField()
-    # role = serializers.SerializerMethodField()
 
-    # def get_role(self, obj):
-    #     return obj.profile.odk_role
+    def get_globals(self, obj):
+        return list(obj.get_all_permissions())
 
     def get_is_admin(self, obj):
         from core_apps.common.permissions_config import ADMIN_ROLES
@@ -24,14 +24,14 @@ class UserPermissionsSerializer(serializers.Serializer):
         return obj.profile.odk_role in ADMIN_ROLES
 
     def get_projects(self, obj):
-        """Retourne les projets avec leurs niveaux de permissions."""
+        """Returns the projects with their permission levels."""
         from core_apps.common.permissions_config import ADMIN_ROLES, PERMISSION_SETS
         from core_apps.projects.models import Projects
         from core_apps.projects.services import get_user_permission_level
 
         user = obj
 
-        # Admin/Manager ont accès à tous les projets
+        # Admin/Manager have access to all projects
         if user.profile.odk_role in ADMIN_ROLES:
             projects = Projects.objects.filter(deleted=False, archived=False)
             return [
@@ -44,7 +44,7 @@ class UserPermissionsSerializer(serializers.Serializer):
                 for p in projects
             ]
 
-        # Pour les autres utilisateurs, récupérer les permissions spécifiques
+        # For other users, retrieve specific permissions
         result = []
         for project in Projects.objects.filter(deleted=False, archived=False):
             level = get_user_permission_level(user, project)
