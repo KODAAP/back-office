@@ -1,6 +1,6 @@
 django
 python-dotenv==1.0.1
-djangorestframework==3.15.0
+djangorestframework==3.16.1
 django-cors-headers
 pytz==2025.2
 django-autoslug==1.9.9
