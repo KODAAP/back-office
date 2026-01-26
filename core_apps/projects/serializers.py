@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-
 from rest_framework import serializers
 
 from core_apps.common.permissions_config import PERMISSION_SETS
@@ -50,11 +49,11 @@ class ProjectSerializer(serializers.ModelSerializer):
 class AssignProjectPermissionSerializer(serializers.Serializer):
     """Serializer pour assigner des permissions à un utilisateur."""
 
-    user_id = serializers.UUIDField()
+    user_id = serializers.IntegerField()
     permission_level = serializers.ChoiceField(choices=list(PERMISSION_SETS.keys()))
 
     def validate_user_id(self, value):
-        if not User.objects.filter(id=value).exists():
+        if not User.objects.filter(pkid=value).exists():
             raise serializers.ValidationError("User not found")
         return value
 
@@ -67,7 +66,7 @@ class ProjectPermissionUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "full_name", "permission_level"]
+        fields = ["pkid", "email", "full_name", "permission_level"]
 
     def get_permission_level(self, obj):
         project = self.context.get("project")

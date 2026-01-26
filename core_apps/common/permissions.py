@@ -84,3 +84,11 @@ class HasSubmissionPermission(HasProjectPermission):
         "PATCH": "projects.edit_submission",
         "DELETE": "projects.delete_submission",
     }
+
+class CanChangeODKRole(permissions.BasePermission):
+    # Only users with an administrative role can change another user ODK role
+    def has_permission(self, request, view):
+        try:
+            return request.user.profile.odk_role in ADMIN_ROLES
+        except AttributeError:
+            return False

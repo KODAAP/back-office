@@ -32,7 +32,7 @@ urlpatterns = [
         name="assign-permission",
     ),
     path(
-        "<int:pkid>/permissions/<uuid:user_id>/revoke/",
+        "<int:pkid>/permissions/<int:user_id>/revoke/",
         ProjectPermissionRevokeView.as_view(),
         name="revoke-permission",
     ),

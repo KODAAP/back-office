@@ -1,15 +1,12 @@
 import logging
-
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-
 from guardian.shortcuts import get_objects_for_user
 from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
 from core_apps.common.permissions import HasProjectPermission
 from core_apps.common.permissions_config import ADMIN_ROLES
 from core_apps.common.renderers import GenericJSONRenderer
@@ -226,12 +223,18 @@ class ProjectRestoreView(APIView):
 # =====================================================================================
 # ===============PROJECT PERMISSION MANAGEMENT========================================
 # ====================================================================================
-# TODO: à Revoir
 
 
 class ProjectPermissionAssignView(APIView):
-    """Assigner des permissions à un utilisateur pour un projet."""
+    """
+    Assigns a specific permission level for a project to a user.
 
+    Handles POST requests to assign a permission (e.g., 'viewer', 'editor')
+    to a specified user for a given project. The requesting user must have
+    'manage_project' permissions on the project.
+    """
+
+    # TODO: verify if user has already the permission on the project, if so return the appropriate message
     permission_classes = [HasProjectPermission]
     required_permission = "projects.manage_project"
 
@@ -251,15 +254,15 @@ class ProjectPermissionAssignView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        user = User.objects.get(id=serializer.validated_data["user_id"])
+        user = User.objects.get(pkid=serializer.validated_data["user_id"])
         level = serializer.validated_data["permission_level"]
 
         try:
             assign_project_permission(user, project, level)
             return Response(
                 {
-                    "user_id": str(user.id),
-                    "project_id": project.pkid,
+                    "user": user.pkid,
+                    "project": project.name,
                     "permission_level": level,
                 },
                 status=status.HTTP_201_CREATED,
@@ -269,7 +272,12 @@ class ProjectPermissionAssignView(APIView):
 
 
 class ProjectPermissionRevokeView(APIView):
-    """Révoquer les permissions d'un utilisateur pour un projet."""
+    """
+    Revokes all permissions for a specific user from a project.
+
+    Handles DELETE requests to remove a user's access to a project.
+    The requesting user must have 'manage_project' permissions on the project.
+    """
 
     permission_classes = [HasProjectPermission]
     required_permission = "projects.manage_project"
@@ -280,14 +288,20 @@ class ProjectPermissionRevokeView(APIView):
         # Object-level permission check via DRF permission class
         self.check_object_permissions(request, project)
 
-        user = get_object_or_404(User, id=user_id)
+        user = get_object_or_404(User, pkid=user_id)
         revoke_project_permissions(user, project)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ProjectPermissionListView(APIView):
-    """Lister tous les utilisateurs avec leurs permissions pour un projet."""
+    """
+    Lists all users and their assigned permissions for a specific project.
+
+    Handles GET requests to retrieve a list of users associated with a
+    project and their respective permission levels. The requesting user must
+    have at least 'access_project' permission on the project.
+    """
 
     permission_classes = [HasProjectPermission]
     required_permission = "projects.access_project"
@@ -300,7 +314,7 @@ class ProjectPermissionListView(APIView):
 
         users_with_perms = get_project_users_with_permissions(project)
 
-        # Sérialiser les utilisateurs
+        # Serialize the user data.
         users_list = list(users_with_perms.keys())
         serializer = ProjectPermissionUserSerializer(
             users_list, many=True, context={"project": project}

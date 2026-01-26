@@ -5,6 +5,8 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
 
+from core_apps.profiles.models import Profile
+
 User = get_user_model()
 
 
@@ -97,3 +99,11 @@ class CreateUserSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
         model = User
         fields = ["id", "first_name", "last_name", "password"]
+
+
+class UpdateODKRoleSerializer(UserSerializer):
+    odk_role = serializers.ChoiceField(choices=Profile.ODKRole.choices, required=True)
+
+    class Meta:
+        model = Profile
+        fields = ["odk_role"]
