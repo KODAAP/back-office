@@ -6,6 +6,7 @@ from .models import Profile
 
 class ProfileSerializer(serializers.ModelSerializer):
     first_name = serializers.ReadOnlyField(source="user.first_name")
+    user_id = serializers.ReadOnlyField(source="user.pkid")
     last_name = serializers.ReadOnlyField(source="user.last_name")
     username = serializers.ReadOnlyField(source="user.username")
     full_name = serializers.ReadOnlyField(source="user.get_full_name")
@@ -17,6 +18,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = [
             "id",
+            "user_id",
             "first_name",
             "last_name",
             "username",

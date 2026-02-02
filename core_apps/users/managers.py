@@ -23,7 +23,6 @@ class UserManager(DjangoUserManager):
     ):
         if not email:
             raise ValueError(_("An email address must be provided"))
-
         email = self.normalize_email(email)
         validate_email_address(email)
 

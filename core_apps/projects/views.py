@@ -320,4 +320,4 @@ class ProjectPermissionListView(APIView):
             users_list, many=True, context={"project": project}
         )
 
-        return Response({"users": serializer.data}, status=status.HTTP_200_OK)
+        return Response({"status_code":status.HTTP_200_OK,"users": serializer.data}, status=status.HTTP_200_OK)

@@ -36,8 +36,3 @@ class User(AbstractUser):
     def get_full_name(self) -> str:
         full_name = f"{self.first_name} {self.last_name}"
         return full_name.strip()
-
-
-# TODO: implement custom anonymous user creation for guardian
-# def get_anonymous_user_instance(User):
-#     return User(real_username='Anonymous', birth_date=datetime.date(1970, 1, 1))

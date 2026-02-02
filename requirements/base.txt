@@ -8,9 +8,9 @@ django-countries==7.5.1
 django-phonenumber-field==7.3.0
 phonenumbers==8.13.32
 drf-yasg==1.21.7
-Pillow==10.2.0
+Pillow==12.1.0
 argon2-cffi==23.1.0
-djoser==2.2.2
+djoser==2.3.3
 django-taggit==5.0.1
 django-filter==24.1
 django-celery-email==3.0.0
