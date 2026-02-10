@@ -19,6 +19,7 @@ from .submissionViews import (
     FormSubmissionsExportView,
     FormSubmissionsListView,
     SubmissionsDataView,
+    SubmissionsZipView,
 )
 from .userViews import (
     AppUserCreateView,
@@ -51,4 +52,5 @@ __all__ = [
     "MatrixView",
     "SubmissionsDataView",
     "FormXLSXDownloadView",
+    "SubmissionsZipView",
 ]

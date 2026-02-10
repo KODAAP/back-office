@@ -1,7 +1,6 @@
 import logging
 
 from django.http import HttpResponse
-
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -132,6 +131,19 @@ class FormSubmissionDetailView(ProjectValidationMixin, APIView):
 
 class SubmissionsDataView(ProjectValidationMixin, APIView):
 
+    @staticmethod
+    def clean_odk_keys(obj):
+        if isinstance(obj, dict):
+            return {
+                k: SubmissionsDataView.clean_odk_keys(v)
+                for k, v in obj.items()
+                if not (k.startswith('__') or k.startswith('@odata') or '@odata' in k)
+            }
+        elif isinstance(obj, list):
+            return [SubmissionsDataView.clean_odk_keys(x) for x in obj]
+        else:
+            return obj
+
     def get(self, request, project_id, form_id):
         project, error_response = self.validate_project(project_id)
         if error_response:
@@ -145,8 +157,37 @@ class SubmissionsDataView(ProjectValidationMixin, APIView):
                         status=status.HTTP_404_NOT_FOUND,
                     )
 
-                data = odk_service.submissions_data(odk_id, form_id)
+                data = SubmissionsDataView.clean_odk_keys(odk_service.submissions_data(odk_id, form_id))
                 return Response(data, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error getting submissions data: {e}")
+            return Response(
+                {"error": "Unable to get submissions data", "detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+
+class SubmissionsZipView(ProjectValidationMixin, APIView):
+
+    def get(self, request, project_id, form_id):
+        project, error_response = self.validate_project(project_id)
+        if error_response:
+            return error_response
+        try:
+            with ODKCentralService(request.user, request=request) as odk_service:
+                odk_id = project.odk_id
+                if not odk_id:
+                    return Response(
+                        {"error": "ODK project not found"},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
+                zip_file = odk_service.zip_submissions(odk_id, form_id)
+                response = HttpResponse(zip_file, content_type="application/zip")
+                response["Content-Disposition"] = (
+                    f'attachment; filename="{form_id}_submissions.zip"'
+                )
+                return response
         except Exception as e:
             logger.error(f"Error getting submissions data: {e}")
             return Response(

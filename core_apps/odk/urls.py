@@ -23,6 +23,7 @@ from core_apps.odk.views import (
     ProjectFormsListView,
     RevokeAccessLinkView,
     SubmissionsDataView,
+    SubmissionsZipView,
 )
 
 app_name = "odk"
@@ -67,6 +68,11 @@ urlpatterns = [
         FormSubmissionsExportView.as_view(),
         name="submissions-csv",
     ),
+    path(
+        "projects/<int:project_id>/forms/<str:form_id>/submissions.zip", SubmissionsZipView.as_view(),
+        name="submissions-zip"
+    ),
+
     path(
         "projects/<int:project_id>/forms/<str:form_id>/submissions.json",
         SubmissionsDataView.as_view(),

@@ -101,7 +101,7 @@ class ODKSubmissionService(BaseODKService):
             headers = {"content-type": "application/json"}
             return self._make_request(
                 "GET",
-                f"projects/{project_id}/forms/{form_id}.svc/Submissions",
+                f"projects/{project_id}/forms/{form_id}.svc/Submissions?$expand=*",
                 headers=headers,
             )
         except ODKValidationError:
@@ -119,3 +119,27 @@ class ODKSubmissionService(BaseODKService):
                 },
                 success=False,
             )
+
+
+    def zip_submissions(self, project_id: int, form_id: str):
+        try:
+            return self._make_request(
+                "GET",
+                f"projects/{project_id}/forms/{form_id}/submissions.csv.zip?attachments=false",
+                return_json=False,
+            )
+        except ODKValidationError:
+                raise
+        except Exception as e:
+            self._log_action(
+            "export_submissions_zip",
+            "submission",
+        f" project:{project_id}| form:{form_id} ",
+            {
+                        "error": str(e),
+                        "odk_account": (
+                            self.current_account["id"] if self.current_account else None
+                        ),
+                    },
+                    success=False,
+                )
