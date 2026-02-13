@@ -25,3 +25,4 @@ requirements/local.txt
 Makefile
 .todo
 odk-forms.md
+.jbeval/
