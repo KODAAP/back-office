@@ -1,20 +1,14 @@
-from typing import List
-
 from django.contrib.auth import get_user_model
-from django.core.files.storage import FileSystemStorage
 from django.db.models import QuerySet
 from django.http import Http404
 
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, generics, status
-from rest_framework.decorators import action
+from rest_framework import generics, status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core_apps.common.renderers import GenericJSONRenderer
 
-from ..common.drive_storage import GoogleDriveStorage
 from .models import Profile
 from .serializers import (
     AvatarUploadSerializer,
@@ -47,7 +41,7 @@ class ProfileListAPIView(generics.ListAPIView):
     # search_fields = ["user__first_name", "user__last_name"]
     # filterset_fields = ["odk_role", "gender", "country_of_origin"]
 
-    def get_queryset(self) ->  QuerySet[Profile]:
+    def get_queryset(self) -> QuerySet[Profile]:
         return (
             Profile.objects.exclude(user__is_staff=True).exclude(
                 user__is_superuser=True
@@ -68,7 +62,7 @@ class ProfileDetailAPIView(generics.RetrieveAPIView):
         try:
             return Profile.objects.get(user=self.request.user)
         except Profile.DoesNotExist:
-            raise Http404("Profile not found")
+            raise Http404("Profile not found") from None
 
 
 class ProfileUpdateAPIView(generics.RetrieveUpdateAPIView):

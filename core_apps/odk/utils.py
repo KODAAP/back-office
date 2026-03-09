@@ -51,7 +51,7 @@ def generate_odk_qr_code(server_url, app_user_token, project_id, project_name):
     # Génération du QR code
     qr = segno.make(qr_data, micro=False)
     buffer = BytesIO()
-    qr.save(buffer, kind="png", scale=5)
+    qr.save(buffer, kind="png", scale=4)
     buffer.seek(0)
 
     # Encodage base64 pour affichage web

@@ -79,10 +79,12 @@ class ODKAccountPool:
             logger.error(
                 f"No ODK account available after {timeout} seconds (thread: {thread_id})"
             )
-            raise TimeoutError(f"No ODK account available after {timeout} seconds")
+            raise TimeoutError(
+                f"No ODK account available after {timeout} seconds"
+            ) from None
         except Exception as e:
             logger.error(f"Error retrieving account: {e} (thread: {thread_id})")
-            raise Exception(f"Error retrieving ODK account: {e}")
+            raise Exception(f"Error retrieving ODK account: {e}") from e
 
     def return_account(self, account) -> None:
         """Remet un compte dans le pool"""

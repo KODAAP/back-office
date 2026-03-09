@@ -30,7 +30,7 @@ PERMISSION_SETS: Dict[str, Set[str]] = {
 }
 
 # Rôles avec accès global (bypass des permissions granulaires)
-ADMIN_ROLES = ["administrator", "manager"]
+ADMIN_ROLES = ["administrator"]
 
 # Mapping des rôles ODK vers les niveaux de permissions autorisés
 ROLE_ALLOWED_LEVELS = {

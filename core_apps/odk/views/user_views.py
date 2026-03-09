@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from core_apps.common.renderers import GenericJSONRenderer
 from core_apps.odk.mixins import ProjectValidationMixin
 from core_apps.odk.services import ODKCentralService
-from core_apps.odk.services.appUserServices import ODKAppUserService
+from core_apps.odk.services.app_user_services import ODKAppUserService
 from core_apps.odk.utils import generate_odk_qr_code
 from core_apps.projects.models import Projects
 

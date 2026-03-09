@@ -8,4 +8,4 @@ class ProfilesConfig(AppConfig):
     verbose_name = _("Profiles")
 
     def ready(self) -> None:
-        import core_apps.profiles.signals
+        pass

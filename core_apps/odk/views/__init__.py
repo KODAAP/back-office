@@ -1,27 +1,27 @@
-from .accessViews import CreateListAccessView, RevokeAccessLinkView
-from .draftViews import (
+from .access_views import CreateListAccessView, RevokeAccessLinkView
+from .draft_views import (
     FormDraftPublishView,
     FormDraftSubmissionsView,
     FormDraftView,
     FormVersionsView,
     FormVersionXMLView,
 )
-from .formViews import (
+from .form_views import (
     FormCreateView,
     FormDeleteView,
     FormDetailView,
     FormXLSXDownloadView,
     ProjectFormsListView,
 )
-from .projectViews import ODKProjectListView
-from .submissionViews import (
+from .project_views import ODKProjectListView
+from .submission_views import (
     FormSubmissionDetailView,
     FormSubmissionsExportView,
     FormSubmissionsListView,
     SubmissionsDataView,
     SubmissionsZipView,
 )
-from .userViews import (
+from .user_views import (
     AppUserCreateView,
     AppUserListView,
     AppUserRevokeView,

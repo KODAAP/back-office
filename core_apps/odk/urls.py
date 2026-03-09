@@ -69,10 +69,10 @@ urlpatterns = [
         name="submissions-csv",
     ),
     path(
-        "projects/<int:project_id>/forms/<str:form_id>/submissions.zip", SubmissionsZipView.as_view(),
-        name="submissions-zip"
+        "projects/<int:project_id>/forms/<str:form_id>/submissions.zip",
+        SubmissionsZipView.as_view(),
+        name="submissions-zip",
     ),
-
     path(
         "projects/<int:project_id>/forms/<str:form_id>/submissions.json",
         SubmissionsDataView.as_view(),

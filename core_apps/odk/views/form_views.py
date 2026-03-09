@@ -92,6 +92,8 @@ class FormCreateView(APIView):
                     ODKCacheManager.invalidate_project_cache(
                         request.user.id, odk_project_id
                     )
+                    if not form.get("version"):
+                        form["version"] = "1.0"
                     return Response({"form": form}, status=status.HTTP_201_CREATED)
                 except ODKValidationError as e:
                     if created_new_odk_project:
@@ -252,7 +254,7 @@ class FormDeleteView(APIView):
             # Appel du service ODK
             with ODKCentralService(request.user, request=request) as odk_service:
                 try:
-                    result = odk_service.delete_form(django_project.odk_id, form_id)
+                    _ = odk_service.delete_form(django_project.odk_id, form_id)
                     # Invalidate cache after form deletion
                     ODKCacheManager.invalidate_project_cache(
                         request.user.id, django_project.odk_id

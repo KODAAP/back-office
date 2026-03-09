@@ -3,7 +3,7 @@ import logging
 import threading
 import time
 from datetime import timedelta
-from typing import Any, Dict
+from typing import Any
 
 from django.conf import settings
 from django.utils import timezone
@@ -15,7 +15,7 @@ from core_apps.odk.models import ODKUserSessions
 from core_apps.odk.utils import get_ssl_verify
 
 from .exceptions import ODKValidationError
-from .poolServices import ODKAccountPool
+from .pool_services import ODKAccountPool
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +151,7 @@ class BaseODKService:
                 raise Exception(
                     f"Unable to connect to ODK Central server. "
                     f"Please verify that the URL '{self.base_url}' is correct and the server is accessible."
-                )
+                ) from e
             except requests.exceptions.Timeout as e:
                 logger.error(f"Timeout connecting to ODK Central: {e}")
                 if attempt < max_retries - 1:
@@ -162,7 +162,7 @@ class BaseODKService:
                 raise Exception(
                     f"ODK Central server is not responding within the timeout period ({timeout}s). "
                     f"Please check server status or increase ODK_REQUEST_TIMEOUT value."
-                )
+                ) from e
             except requests.exceptions.HTTPError as e:
                 if e.response.status_code == 401:
                     logger.warning(
@@ -189,9 +189,9 @@ class BaseODKService:
                 )
 
                 if status_code == 404:
-                    raise Exception(f"Resource not found: {endpoint}")
+                    raise Exception(f"Resource not found: {endpoint}") from e
                 elif status_code == 403:
-                    raise Exception(f"Access denied to resource: {endpoint}")
+                    raise Exception(f"Access denied to resource: {endpoint}") from e
                 elif status_code >= 500:
                     if attempt < max_retries - 1:
                         wait_time = 2**attempt
@@ -200,15 +200,17 @@ class BaseODKService:
                         continue
                     raise Exception(
                         f"ODK Central server error ({status_code}). Please try again later."
-                    )
+                    ) from None
 
                 # Créer une exception personnalisée avec les détails et le status_code
                 raise ODKValidationError(
                     str(e), error_detail=error_detail, status_code=status_code
-                )
+                ) from e
             except json.JSONDecodeError as e:
                 logger.error(f"JSON decoding error: {e}")
-                raise Exception("ODK Central server returned an invalid response.")
+                raise Exception(
+                    "ODK Central server returned an invalid response."
+                ) from e
             except Exception as e:
                 logger.error(f"Unexpected error during request to ODK Central: {e}")
                 if attempt < max_retries - 1:

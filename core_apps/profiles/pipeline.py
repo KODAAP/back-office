@@ -16,7 +16,7 @@ def save_profile(backend, user, response, *args, **kwargs):
                 img_temp = NamedTemporaryFile(delete=True)
                 img_temp.write(response.content)
                 img_temp.flush()
-                storage = FileSystemStorage()
+                _ = FileSystemStorage()
                 profile, created = Profile.objects.get_or_create(user=user)
                 profile.avatar.save(f"{user.email}_photo", img_temp, save=True)
 

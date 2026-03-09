@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 
 from core_apps.common.models import TimeStampedModel
 
@@ -44,6 +43,7 @@ class Projects(TimeStampedModel):
             ("create_form", "Can create ODK form"),
             ("edit_form", "Can edit ODK form"),
             ("delete_form", "Can delete ODK form"),
+            # ("download_form", "Can download ODK form"),
             ("view_submission", "Can view submission"),
             ("add_submission", "Can create submission"),
             ("edit_submission", "Can edit submission"),

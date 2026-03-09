@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.db.models.signals import pre_delete
+
 from guardian.models import GroupObjectPermission, UserObjectPermission
 
 User = get_user_model()

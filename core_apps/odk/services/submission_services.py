@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from .baseService import BaseODKService
+from .base_service import BaseODKService
 from .exceptions import ODKValidationError
 
 
@@ -120,7 +120,6 @@ class ODKSubmissionService(BaseODKService):
                 success=False,
             )
 
-
     def zip_submissions(self, project_id: int, form_id: str):
         try:
             return self._make_request(
@@ -129,17 +128,17 @@ class ODKSubmissionService(BaseODKService):
                 return_json=False,
             )
         except ODKValidationError:
-                raise
+            raise
         except Exception as e:
             self._log_action(
-            "export_submissions_zip",
-            "submission",
-        f" project:{project_id}| form:{form_id} ",
-            {
-                        "error": str(e),
-                        "odk_account": (
-                            self.current_account["id"] if self.current_account else None
-                        ),
-                    },
-                    success=False,
-                )
+                "export_submissions_zip",
+                "submission",
+                f" project:{project_id}| form:{form_id} ",
+                {
+                    "error": str(e),
+                    "odk_account": (
+                        self.current_account["id"] if self.current_account else None
+                    ),
+                },
+                success=False,
+            )

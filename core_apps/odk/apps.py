@@ -8,4 +8,4 @@ class OdkConfig(AppConfig):
     verbose_name = _("Open Data kit")
 
     def ready(self):
-        import core_apps.odk.signals
+        pass

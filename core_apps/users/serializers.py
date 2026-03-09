@@ -23,7 +23,7 @@ class UserPermissionsSerializer(serializers.Serializer):
     def get_is_admin(self, obj):
         from core_apps.common.permissions_config import ADMIN_ROLES
 
-        return obj.profile.odk_role in ADMIN_ROLES
+        return obj.profile.odk_role in ADMIN_ROLES or obj.is_superuser
 
     def get_projects(self, obj):
         """Returns the projects with their permission levels."""
@@ -98,7 +98,7 @@ class CustomUserSerializer(UserSerializer):
 class CreateUserSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
         model = User
-        fields = ["id", "first_name", "last_name", "password"]
+        fields = ["id", "email", "first_name", "last_name", "password"]
 
 
 class UpdateODKRoleSerializer(UserSerializer):

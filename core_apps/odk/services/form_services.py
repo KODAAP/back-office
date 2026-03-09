@@ -1,9 +1,7 @@
 import logging
 from typing import Dict, List
 
-from httplib2.auth import params
-
-from .baseService import BaseODKService
+from .base_service import BaseODKService
 from .exceptions import ODKValidationError
 
 logger = logging.getLogger(__name__)

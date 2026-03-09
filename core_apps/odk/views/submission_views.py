@@ -1,6 +1,7 @@
 import logging
 
 from django.http import HttpResponse
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -74,16 +75,16 @@ class FormSubmissionsExportView(ProjectValidationMixin, APIView):
                         status=status.HTTP_400_BAD_REQUEST,
                     )
                 if to == "csv":
-                    contentType = "text/csv"
+                    content_type = "text/csv"
                 else:
-                    contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
                 file_bytes = odk_service.export_submissions(
                     odk_project_id, form_id, to=to
                 )
                 response = HttpResponse(
                     file_bytes,
-                    content_type=contentType,
+                    content_type=content_type,
                 )
                 response["Content-Disposition"] = (
                     f'filename="{form_id}_submissions.{to}"'
@@ -137,7 +138,7 @@ class SubmissionsDataView(ProjectValidationMixin, APIView):
             return {
                 k: SubmissionsDataView.clean_odk_keys(v)
                 for k, v in obj.items()
-                if not (k.startswith('__') or k.startswith('@odata') or '@odata' in k)
+                if not (k.startswith("__") or k.startswith("@odata") or "@odata" in k)
             }
         elif isinstance(obj, list):
             return [SubmissionsDataView.clean_odk_keys(x) for x in obj]
@@ -157,7 +158,9 @@ class SubmissionsDataView(ProjectValidationMixin, APIView):
                         status=status.HTTP_404_NOT_FOUND,
                     )
 
-                data = SubmissionsDataView.clean_odk_keys(odk_service.submissions_data(odk_id, form_id))
+                data = SubmissionsDataView.clean_odk_keys(
+                    odk_service.submissions_data(odk_id, form_id)
+                )
                 return Response(data, status=status.HTTP_200_OK)
         except Exception as e:
             logger.error(f"Error getting submissions data: {e}")
@@ -165,7 +168,6 @@ class SubmissionsDataView(ProjectValidationMixin, APIView):
                 {"error": "Unable to get submissions data", "detail": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
 
 
 class SubmissionsZipView(ProjectValidationMixin, APIView):

@@ -37,7 +37,7 @@ def assign_project_permission(user, project, permission_level):
     try:
         user_role = user.profile.odk_role
     except Profile.DoesNotExist:
-        raise ValueError(f"User {user.username} does not have a profile.")
+        raise ValueError(f"User {user.username} does not have a profile.") from None
 
     # Les administrateurs et managers ont un accès global
     if user_role in ADMIN_ROLES:

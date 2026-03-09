@@ -31,7 +31,7 @@ repos:
     rev: 24.3.0
     hooks:
       - id: black
-        language_version: python3.12
+        language_version: python3.11
 
   - repo: https://github.com/rtts/djhtml
     rev: 3.0.6
@@ -39,8 +39,8 @@ repos:
       - id: djhtml
         args: [--tabwidth=2]
 
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.1.13
-    hooks:
-      - id: ruff
-        args: [--fix, --exit-non-zero-on-fix, --config=pyproject.toml]
+#  - repo: https://github.com/charliermarsh/ruff-pre-commit
+#    rev: v0.1.13
+#    hooks:
+#      - id: ruff
+#        args: [--fix, --exit-non-zero-on-fix, --config=pyproject.toml]

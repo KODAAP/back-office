@@ -9,7 +9,7 @@ from django.utils.deconstruct import deconstructible
 
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
+from googleapiclient.http import MediaIoBaseUpload
 
 logger = logging.getLogger(__name__)
 
@@ -186,7 +186,7 @@ class GoogleDriveStorage(Storage):
             file_id = self.get_image_name(name)
             self.service.files().get(fileId=file_id, supportsAllDrives=True).execute()
             return True
-        except:
+        except Exception:
             return False
 
     def url(self, name):
@@ -210,7 +210,7 @@ class GoogleDriveStorage(Storage):
                 .execute()
             )
             return int(file.get("size", 0))
-        except:
+        except Exception:
             return 0
 
     def get_image_name(self, name):

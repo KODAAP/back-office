@@ -3,7 +3,7 @@ from typing import Dict, List
 
 from django.utils import timezone
 
-from .baseService import BaseODKService
+from .base_service import BaseODKService
 
 logger = logging.getLogger(__name__)
 

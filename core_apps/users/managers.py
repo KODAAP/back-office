@@ -10,7 +10,7 @@ def validate_email_address(email: str):
     try:
         validate_email(email)
     except ValidationError:
-        raise ValidationError(_("Enter a valid email address"))
+        raise ValidationError(_("Enter a valid email address")) from None
 
 
 class UserManager(DjangoUserManager):

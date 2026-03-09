@@ -1,16 +1,24 @@
 import logging
+
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+
 from guardian.shortcuts import get_objects_for_user
 from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from core_apps.common.permissions import HasProjectPermission
-from core_apps.common.permissions_config import ADMIN_ROLES
 from core_apps.common.renderers import GenericJSONRenderer
 from core_apps.common.utils import log_audit_action
+from core_apps.projects.services import (
+    assign_project_permission,
+    can_assign_project_permissions,
+    get_project_users_with_permissions,
+    revoke_project_permissions,
+)
 
 from .models import Projects
 from .serializers import (
@@ -21,12 +29,6 @@ from .serializers import (
 
 User = get_user_model()
 
-from core_apps.projects.services import (
-    assign_project_permission,
-    can_assign_project_permissions,
-    get_project_users_with_permissions,
-    revoke_project_permissions,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +89,7 @@ class ProjectListCreateView(generics.ListCreateAPIView):
         user = self.request.user
         role = getattr(getattr(user, "profile", None), "odk_role", None)
         has_global_create = user.has_perm("projects.add_projects")
-        if not has_global_create and role not in ["administrator", "manager"]:
+        if not has_global_create and role not in ["administrator"]:
             raise PermissionDenied("Not allowed to create projects")
         serializer.save(created_by=user)
 
@@ -320,4 +322,7 @@ class ProjectPermissionListView(APIView):
             users_list, many=True, context={"project": project}
         )
 
-        return Response({"status_code":status.HTTP_200_OK,"users": serializer.data}, status=status.HTTP_200_OK)
+        return Response(
+            {"status_code": status.HTTP_200_OK, "users": serializer.data},
+            status=status.HTTP_200_OK,
+        )

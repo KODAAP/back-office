@@ -14,4 +14,4 @@ def convert_excel_to_xform_task(file_content, file_name):
         xEt.fromstring(xform_xml)
         return xform_xml
     except Exception as e:
-        raise Exception(f"Failed to convert Excel to XForm: {str(e)}")
+        raise Exception(f"Failed to convert Excel to XForm: {str(e)}") from e

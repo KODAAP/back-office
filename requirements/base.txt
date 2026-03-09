@@ -30,4 +30,4 @@ pandas
 xlsxwriter
 segno
 django-odata
-django-guardian
+#django-guardian

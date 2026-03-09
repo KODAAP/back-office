@@ -1,11 +1,11 @@
-from .appUserServices import ODKAppUserService
-from .baseService import BaseODKService
-from .formServices import ODKFormService
+from .app_user_services import ODKAppUserService
+from .base_service import BaseODKService
+from .form_services import ODKFormService
 
 # from .permissionServices import ODKPermissionMixin
-from .projectServices import ODKProjectService
-from .publicAccessServices import ODKPublicAccessService
-from .submissionServices import ODKSubmissionService
+from .project_services import ODKProjectService
+from .public_access_services import ODKPublicAccessService
+from .submission_services import ODKSubmissionService
 
 
 class ODKCentralService(
