@@ -2,7 +2,6 @@ from .common import *
 
 DEBUG = False
 
-SITE_NAME = getenv("SITE_NAME")
 
 SECRET_KEY = getenv(
     "DJANGO_SECRET_KEY", "UUc-qwrxzkZFyx4mrxXFfgHpA1VLOIuAojmk8T9q7n35A6-k-yM"
@@ -55,9 +54,13 @@ ADMIN_URL = getenv("DJANGO_ADMIN_URL")
 EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
 EMAIL_HOST = getenv("EMAIL_HOST")
 EMAIL_PORT = getenv("EMAIL_PORT")
-DEFAULT_FROM_EMAIL = getenv("DEFAULT_FROM_EMAIL")
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = getenv("DEFAULT_FROM_EMAIL")
+DEFAULT_FROM_EMAIL = getenv("DEFAULT_FROM_EMAIL", "sycosur@insuco.com")
+SITE_NAME = getenv("SITE_NAME", "Sycosur2")
+if SITE_NAME and "<" not in DEFAULT_FROM_EMAIL:
+    DEFAULT_FROM_EMAIL = f"{SITE_NAME} <{DEFAULT_FROM_EMAIL}>"
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = getenv("DEFAULT_FROM_EMAIL", "sycosur@insuco.com")
 EMAIL_HOST_PASSWORD = getenv("EMAIL_PASS")
 DOMAIN = getenv("DOMAIN")
 

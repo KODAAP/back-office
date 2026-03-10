@@ -18,15 +18,16 @@ logger = logging.getLogger(__name__)
 def send_welcome_email(user):
     if not settings.DEBUG:  # Production only
         try:
+            site_name = getattr(settings, "SITE_NAME", "Sycosur2")
             send_mail(
-                subject="Welcome on Sycosur !",
+                subject=f"Welcome on {site_name} !",
                 message=f"""
-                Hello {user.get_full_name()},
+                Hello {user.get_full_name},
                 Thank you for registering via your OAuth account.
-                You can now access all Sycosur features.
-                The Sycosur team
+                You can now access all {site_name} features.
+                The {site_name} team
                 """,
-                from_email="sycosur@insuco.com",
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
                 fail_silently=False,
             )

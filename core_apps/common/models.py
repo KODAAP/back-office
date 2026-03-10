@@ -62,4 +62,4 @@ class AuditLogs(TimeStampedModel):
 
     def __str__(self) -> str:
         status = "succeeded" if self.success else "failed"
-        return f"{self.action} ({self.resource_type}) par {self.user.get_full_name()} - {status}"
+        return f"{self.action} ({self.resource_type}) par {self.user.get_full_name} - {status}"

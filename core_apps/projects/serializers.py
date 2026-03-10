@@ -38,7 +38,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     def get_created_by_name(self, obj):
         if obj.created_by and obj.created_by.get_full_name is not None:
             return obj.created_by.get_full_name
-        else:
+        elif obj.created_by:
             return obj.created_by.username
         return None
 
