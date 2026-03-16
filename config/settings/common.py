@@ -63,6 +63,7 @@ LOCAL_APPS = [
     "core_apps.profiles",
     "core_apps.odk",
     "core_apps.projects",
+    "core_apps.invitations",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -335,3 +336,6 @@ GUARDIAN_RENDER_403 = True  # Page d'erreur personnalisable
 #     'ENABLE_METADATA': True,   # Expose $metadata endpoint
 #     'ENABLE_SERVICE_DOCUMENT': True,  # Expose service document
 # }
+
+# Invitation settings
+FRONTEND_URL = getenv("FRONTEND_URL", "http://localhost:8080")

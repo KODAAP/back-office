@@ -1,4 +1,4 @@
-django
+django==5.2.12
 python-dotenv==1.0.1
 djangorestframework==3.16.1
 django-cors-headers
@@ -30,4 +30,4 @@ pandas
 xlsxwriter
 segno
 django-odata
-#django-guardian
+django-guardian==3.2.0
