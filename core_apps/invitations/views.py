@@ -1,5 +1,7 @@
 import logging
 
+from django.db import transaction
+
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
@@ -29,15 +31,21 @@ class SendInvitationView(APIView):
 
         email = serializer.validated_data["email"]
 
-        # Créer l'invitation
-        invitation = UserInvitation.objects.create(email=email, invited_by=request.user)
-
-        # Envoyer l'email
         try:
-            invitation.send_invitation_email()
-            logger.info(f"Invitation sent to {email} by {request.user.email}")
+            with transaction.atomic():
+                # Créer l'invitation
+                invitation = UserInvitation.objects.create(
+                    email=email, invited_by=request.user
+                )
+
+                # Envoyer l'email
+                invitation.send_invitation_email()
+
+                logger.info(f"Invitation sent to {email} by {request.user.email}")
+
         except Exception as e:
             logger.error(f"Error sending invitation to {email}: {e}")
+            # L'invitation n'est pas créée grâce au transaction.atomic
             return Response(
                 {"error": "Erreur lors de l'envoi de l'email"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -94,44 +102,36 @@ class BulkInvitationView(APIView):
 
         for email in emails:
             try:
-                # Vérifier si utilisateur existe déjà
-                if User.objects.filter(email=email).exists():
-                    failed_list.append(
-                        {
-                            "email": email,
-                            "reason": "Un utilisateur avec cet email existe déjà",
-                        }
+                with transaction.atomic():
+                    # Vérifier si utilisateur existe déjà
+                    if User.objects.filter(email=email).exists():
+                        raise Exception("Un utilisateur avec cet email existe déjà")
+
+                    # Vérifier si invitation non-utilisée existe déjà
+                    existing_invitation = UserInvitation.objects.filter(
+                        email=email, is_used=False
+                    ).first()
+
+                    if existing_invitation and existing_invitation.is_valid():
+                        raise Exception("Une invitation valide existe déjà")
+
+                    # Créer l'invitation
+                    invitation = UserInvitation.objects.create(
+                        email=email, invited_by=request.user
                     )
-                    continue
 
-                # Vérifier si invitation non-utilisée existe déjà
-                existing_invitation = UserInvitation.objects.filter(
-                    email=email, is_used=False
-                ).first()
+                    # Envoyer l'email
+                    invitation.send_invitation_email()
 
-                if existing_invitation and existing_invitation.is_valid():
-                    failed_list.append(
-                        {"email": email, "reason": "Une invitation valide existe déjà"}
+                    success_list.append(
+                        {"email": email, "invitation_id": invitation.id}
                     )
-                    continue
 
-                # Créer l'invitation
-                invitation = UserInvitation.objects.create(
-                    email=email, invited_by=request.user
-                )
-
-                # Envoyer l'email
-                invitation.send_invitation_email()
-
-                success_list.append({"email": email, "invitation_id": invitation.id})
-
-                logger.info(f"Invitation sent to {email} by {request.user.email}")
+                    logger.info(f"Invitation sent to {email} by {request.user.email}")
 
             except Exception as e:
                 logger.error(f"Error sending invitation to {email}: {e}")
-                failed_list.append(
-                    {"email": email, "reason": "Erreur lors de l'envoi de l'email"}
-                )
+                failed_list.append({"email": email, "reason": str(e)})
 
         return Response(
             {

@@ -365,4 +365,4 @@ class UserProjectListView(generics.ListAPIView):
 
     @property
     def object_label(self):
-        return "projects"
+        return "userProjects"

@@ -38,7 +38,7 @@ urlpatterns = [
         name="revoke-permission",
     ),
     path(
-        "users/<int:user_id>/projects/",
+        "user/<int:user_id>",
         UserProjectListView.as_view(),
         name="user-project-list",
     ),
