@@ -326,3 +326,43 @@ class ProjectPermissionListView(APIView):
             {"status_code": status.HTTP_200_OK, "users": serializer.data},
             status=status.HTTP_200_OK,
         )
+
+
+class UserProjectListView(generics.ListAPIView):
+    """
+    View for listing projects assigned to a specific user.
+    Accessible only by administrators.
+    """
+
+    serializer_class = ProjectSerializer
+    renderer_classes = [GenericJSONRenderer]
+    permission_classes = [HasProjectPermission]
+
+    def get_queryset(self):
+        user_id = self.kwargs.get("user_id")
+        target_user = get_object_or_404(User, pkid=user_id)
+
+        # Get projects where the target user has 'access_project' permission
+        qs = get_objects_for_user(
+            target_user, "projects.access_project", klass=Projects
+        )
+
+        # Apply same filters as ProjectListCreateView
+        def _truthy(val: str) -> bool:
+            if val is None:
+                return False
+            return val.strip().lower() in {"1", "true", "yes", "y", "on"}
+
+        include_deleted = _truthy(self.request.query_params.get("add_deleted"))
+        include_archived = _truthy(self.request.query_params.get("add_archived"))
+
+        if not include_deleted:
+            qs = qs.filter(deleted=False)
+        if not include_archived:
+            qs = qs.filter(archived=False)
+
+        return qs
+
+    @property
+    def object_label(self):
+        return "projects"
