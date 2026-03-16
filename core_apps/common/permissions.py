@@ -13,7 +13,7 @@ class HasProjectPermission(permissions.BasePermission):
         "OPTIONS": "projects.access_project",
         "PUT": "projects.manage_project",
         "PATCH": "projects.manage_project",
-        "DELETE": "projects.manage_project",
+        "DELETE": "projects.add_projects",
     }
 
     def has_permission(self, request, view):
@@ -33,7 +33,7 @@ class HasProjectPermission(permissions.BasePermission):
 
         # Création (POST sur la collection): autoriser si l'utilisateur possède la
         # permission globale du modèle Django "projects.add_projects"
-        if request.method == "POST":
+        if request.method in ["POST", "DELETE"]:
             if request.user.profile.odk_role in ADMIN_ROLES:
                 return True
             return request.user.has_perm("projects.add_projects")
