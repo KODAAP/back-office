@@ -1,0 +1,49 @@
+{% extends "emails/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Invitation à rejoindre Sycosur" %}{% endblock title %}
+
+{% block content %}
+  <div style="font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif,'Apple Color Emoji','Segoe UI Emoji'; line-height: 1.5; color: #24292e; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="border: 1px solid #e1e4e8; border-radius: 6px; padding: 32px; background-color: #fff;">
+      <h2 style="font-size: 20px; font-weight: 600; text-align: center; margin-top: 0; margin-bottom: 16px;">
+        {{ invited_by }} vous a invité à rejoindre <strong>{{ site_name }}</strong>
+      </h2>
+
+      <p style="margin-top: 0; margin-bottom: 16px;">
+        {{ invited_by }} vous a invité à rejoindre <strong>{{ site_name }}</strong>.</br>
+        Rendez-vous sur la plateforme pour découvrir votre espace de travail.
+      </p>
+
+      <p style="color: #586069; font-size: 14px; margin-bottom: 24px;">
+        Cette invitation expirera dans 7 jours.
+      </p>
+
+      <div style="text-align: center; margin-bottom: 24px;">
+        <a href="{{ invitation_link }}" style="background-color: #2ea44f; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+          Créer mon compte
+        </a>
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid #e1e4e8; margin: 24px 0;">
+
+      <p style="font-size: 12px; color: #586069; margin-bottom: 8px;">
+        <strong>Nouveau sur {{ site_name }} ?</strong> {{ site_name }} est une plateforme de gestion et de suivi.
+      </p>
+
+      <p style="font-size: 12px; color: #586069; margin-bottom: 16px;">
+        <strong>Note :</strong> Cette invitation est destinée à <a href="mailto:{{ email }}" style="color: #0366d6; text-decoration: none;">{{ email }}</a>.
+        Si vous n'attendiez pas cette invitation, vous pouvez ignorer cet e-mail.
+      </p>
+
+      <p style="font-size: 12px; color: #586069; margin-top: 24px;">
+        Le bouton ne fonctionne pas ? Copiez et collez le lien suivant dans votre navigateur :<br>
+        <a href="{{ invitation_link }}" style="color: #0366d6; text-decoration: none; word-break: break-all;">{{ invitation_link }}</a>
+      </p>
+    </div>
+
+    <div style="text-align: center; margin-top: 24px; font-size: 12px; color: #586069;">
+      &copy; {{ current_year }} {{ site_name }}. Propulsé par Insuco.
+    </div>
+  </div>
+{% endblock content %}

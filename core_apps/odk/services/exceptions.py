@@ -90,7 +90,7 @@ class ODKValidationError(Exception):
             "error": error_message,
             "details": str(
                 self
-            ),  # Renommé de 'detail' à 'details' pour matcher ta demande
+            ),  # Renommé de 'detail' à 'details' pour matcher la demande
             "validations": validations,
         }
 
