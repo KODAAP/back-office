@@ -1,0 +1,10 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Révocation de permissions{% endblock %}
+
+{% block content %}
+  <p>Bonjour,</p>
+  <p>L'utilisateur <strong>{{ user_full_name }}</strong> ({{ user_email }}) a vu ses permissions révoquées pour le projet <strong>{{ project_name }}</strong> par <strong>{{ revoked_by }}</strong>.</p>
+  <p>Date et heure : {{ timestamp }}</p>
+  <p>Cordialement,<br>L'équipe Système</p>
+{% endblock %}

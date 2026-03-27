@@ -2,6 +2,7 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
 from django.utils import timezone
 
 from guardian.shortcuts import get_objects_for_user
@@ -12,7 +13,9 @@ from rest_framework.views import APIView
 
 from core_apps.common.permissions import HasProjectPermission
 from core_apps.common.renderers import GenericJSONRenderer
-from core_apps.common.utils import log_audit_action
+from core_apps.common.tasks import send_email_task
+from core_apps.common.utils import log_audit_action, truthy
+from core_apps.profiles.models import Profile
 from core_apps.projects.services import (
     assign_project_permission,
     can_assign_project_permissions,
@@ -50,23 +53,34 @@ class ProjectListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         """Return only projects the user can access, with optional deleted/archived inclusion."""
+        user = self.request.user
+        role = getattr(getattr(user, "profile", None), "odk_role", None)
 
-        def _truthy(val: str) -> bool:
-            if val is None:
-                return False
-            return val.strip().lower() in {"1", "true", "yes", "y", "on"}
+        include_deleted = truthy(self.request.query_params.get("add_deleted"))
+        include_archived = truthy(self.request.query_params.get("add_archived"))
 
-        include_deleted = _truthy(self.request.query_params.get("add_deleted"))
-        include_archived = _truthy(self.request.query_params.get("add_archived"))
+        if role == Profile.ODKRole.ADMINISTRATOR:
+            # Administrators see all projects by default
+            qs = Projects.objects.all()
+        else:
+            # Restrict to projects the user has access to via object permissions
+            qs = get_objects_for_user(user, "projects.access_project", klass=Projects)
 
-        # Restrict to projects the user has access to via object permissions
-        qs = get_objects_for_user(
-            self.request.user, "projects.access_project", klass=Projects
-        )
+        # Apply common filters
         if not include_deleted:
             qs = qs.filter(deleted=False)
-        if not include_archived:
+
+        # For administrators, archived projects are included by default
+        # (unless add_archived=false is explicitly provided)
+        if role == Profile.ODKRole.ADMINISTRATOR:
+            if (
+                not include_archived
+                and self.request.query_params.get("add_archived") is not None
+            ):
+                qs = qs.filter(archived=False)
+        elif not include_archived:
             qs = qs.filter(archived=False)
+
         return qs
 
     @property
@@ -293,6 +307,31 @@ class ProjectPermissionRevokeView(APIView):
         user = get_object_or_404(User, pkid=user_id)
         revoke_project_permissions(user, project)
 
+        # Notify all administrators
+        admin_emails = list(
+            Profile.objects.filter(odk_role=Profile.ODKRole.ADMINISTRATOR)
+            .select_related("user")
+            .values_list("user__email", flat=True)
+        )
+
+        if admin_emails:
+            context = {
+                "user_full_name": user.get_full_name,
+                "user_email": user.email,
+                "project_name": project.name,
+                "revoked_by": request.user.get_full_name,
+                "timestamp": timezone.now(),
+            }
+            html_message = render_to_string(
+                "emails/revocation_notification.html", context
+            )
+            send_email_task.delay(
+                subject="Notification de révocation de permissions",
+                message=f"Les permissions de {user.get_full_name} ont été révoquées pour le projet {project.name}.",
+                recipient_list=admin_emails,
+                html_message=html_message,
+            )
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -341,27 +380,40 @@ class UserProjectListView(generics.ListAPIView):
     def get_queryset(self):
         user_id = self.kwargs.get("user_id")
         target_user = get_object_or_404(User, pkid=user_id)
-
         # Get projects where the target user has 'access_project' permission
         qs = get_objects_for_user(
             target_user, "projects.access_project", klass=Projects
         )
 
-        # Apply same filters as ProjectListCreateView
-        def _truthy(val: str) -> bool:
-            if val is None:
-                return False
-            return val.strip().lower() in {"1", "true", "yes", "y", "on"}
+        include_deleted = truthy(self.request.query_params.get("add_deleted"))
+        include_archived = truthy(self.request.query_params.get("add_archived"))
 
-        include_deleted = _truthy(self.request.query_params.get("add_deleted"))
-        include_archived = _truthy(self.request.query_params.get("add_archived"))
+        user = self.request.user
+        role = getattr(getattr(user, "profile", None), "odk_role", None)
 
+        # Apply common filters
         if not include_deleted:
             qs = qs.filter(deleted=False)
-        if not include_archived:
+
+        if role == Profile.ODKRole.ADMINISTRATOR:
+            # If the requester is an admin, show all projects of the target user
+            # including archived ones by default
+            if (
+                not include_archived
+                and self.request.query_params.get("add_archived") is not None
+            ):
+                qs = qs.filter(archived=False)
+        elif not include_archived:
             qs = qs.filter(archived=False)
 
         return qs
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        user_id = self.kwargs.get("user_id")
+        target_user = get_object_or_404(User, pkid=user_id)
+        context["target_user"] = target_user
+        return context
 
     @property
     def object_label(self):

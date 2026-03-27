@@ -20,6 +20,15 @@ def get_client_ip(request) -> Optional[str]:
     return request.META.get("REMOTE_ADDR")
 
 
+def truthy(val: Any) -> bool:
+    """Check if a value is truthy (1, true, yes, y, on)."""
+    if val is None:
+        return False
+    if isinstance(val, bool):
+        return val
+    return str(val).strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
 def log_audit_action(
     *,
     user: Any,

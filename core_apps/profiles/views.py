@@ -4,15 +4,18 @@ from django.http import Http404
 
 from rest_framework import generics, status
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core_apps.common.permissions import CanChangeODKRole
 from core_apps.common.renderers import GenericJSONRenderer
 
 from .models import Profile
 from .serializers import (
     AvatarUploadSerializer,
     ProfileSerializer,
+    RoleUpdateSerializer,
     UpdateProfileSerializer,
 )
 from .tasks import upload_avatar_to_media
@@ -43,9 +46,9 @@ class ProfileListAPIView(generics.ListAPIView):
 
     def get_queryset(self) -> QuerySet[Profile]:
         return (
-            Profile.objects.exclude(user__is_staff=True).exclude(
-                user__is_superuser=True
-            )
+            Profile.objects.exclude(user__is_staff=True)
+            .exclude(user__is_superuser=True)
+            .exclude(user=self.request.user)
             # .filter(odk_role=Profile.ODKRole.DATA_COLLECTOR)
         )
 
@@ -97,6 +100,26 @@ class AvatarUploadView(APIView):
             image_content = image.read()
             upload_avatar_to_media.delay(str(profile.id), image_content, image.name)
             return Response(status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProfileRoleUpdateAPIView(APIView):
+    """
+    Update a user's role. Only accessible by administrators.
+    """
+
+    permission_classes = [CanChangeODKRole]
+
+    def patch(self, request, pkid):
+        try:
+            profile = Profile.objects.get(user__pkid=pkid)
+        except Profile.DoesNotExist:
+            raise Http404("Profile for this user not found")
+
+        serializer = RoleUpdateSerializer(profile, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

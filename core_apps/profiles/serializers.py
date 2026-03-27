@@ -44,6 +44,8 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(source="user.last_name")
     username = serializers.CharField(source="user.username")
     country_of_origin = CountryField(name_only=True)
+    gender = serializers.ChoiceField(choices=Profile.Gender.choices, source="gender")
+    odk_role = serializers.CharField(read_only=True)
 
     class Meta:
         model = Profile
@@ -58,6 +60,14 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
             "odk_role",
             "phone_number",
         ]
+
+
+class RoleUpdateSerializer(serializers.ModelSerializer):
+    role = serializers.ChoiceField(choices=Profile.ODKRole.choices, source="odk_role")
+
+    class Meta:
+        model = Profile
+        fields = ["role"]
 
 
 class AvatarUploadSerializer(serializers.ModelSerializer):

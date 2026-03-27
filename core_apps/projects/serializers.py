@@ -11,6 +11,7 @@ User = get_user_model()
 
 class ProjectSerializer(serializers.ModelSerializer):
     created_by_name = serializers.SerializerMethodField()
+    permission_level = serializers.SerializerMethodField()
 
     class Meta:
         model = Projects
@@ -24,6 +25,8 @@ class ProjectSerializer(serializers.ModelSerializer):
             "updated_at",
             "created_by",
             "created_by_name",
+            "permission_level",
+            "archived",
         ]
         read_only_fields = [
             "id",
@@ -33,6 +36,8 @@ class ProjectSerializer(serializers.ModelSerializer):
             "updated_at",
             "created_by",
             "created_by_name",
+            "permission_level",
+            "archived",
         ]
 
     def get_created_by_name(self, obj):
@@ -40,6 +45,14 @@ class ProjectSerializer(serializers.ModelSerializer):
             return obj.created_by.get_full_name
         elif obj.created_by:
             return obj.created_by.username
+        return None
+
+    def get_permission_level(self, obj):
+        target_user = self.context.get("target_user")
+        if target_user:
+            from core_apps.projects.services import get_user_permission_level
+
+            return get_user_permission_level(target_user, obj)
         return None
 
     def create(self, validated_data):
