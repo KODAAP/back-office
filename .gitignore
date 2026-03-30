@@ -18,7 +18,8 @@ secrets.json
 config/settings/local.py
 requirements/local.txt
 .idea/
-/docs
+/docs/api.yaml
+/docs/database.md
 .vscode/
 *.egg-info/
 /credentials

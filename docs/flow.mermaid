@@ -1,0 +1,21 @@
+flowchart TD
+    A[Utilisateur authentifié] --> B{Quel est le rôle ODK?}
+    B -->|administrator / manager| C[Accès global: bypass permissions granulaires<br/>Niveau effectif: manage]
+    B -->|insuco_user| D{Niveaux autorisés: read, submit, contribute}
+    B -->|data_collector| E{Niveaux autorisés: read, submit}
+    D --> F[Vérifier permissions spécifiques sur l'objet Project]
+    E --> F
+    F --> G{Assignation/Révoquation via API ou Signal?}
+    G -->|POST /assign/ ou Signal post_save| H[Service: assign_project_permission<br/>- Vérif rôle autorisé<br/>- Supprimer anciennes perms<br/>- Assigner set de perms via Guardian]
+    G -->|DELETE /revoke/| I[Service: revoke_project_permissions<br/>- Supprimer toutes les perms]
+    H --> J[Enregistrer en DB Guardian]
+    I --> J
+    J --> K[Enrichir /users/me avec niveaux par projet<br/>via get_user_permission_level]
+    K --> L{Requête API sur ressource Project/Form/Submission}
+    L --> M[Permission Class: HasProjectPermission<br/>- Bypass si admin/manager<br/>- Check perms requises via Guardian]
+    M -->|Accès OK| N[Action autorisée<br/>view/create/edit/delete etc.]
+    M -->|Accès NOK| O[HTTP 403 Forbidden]
+
+    style C fill:#485623
+    style N fill:#485623
+    style O fill:#FF5896
