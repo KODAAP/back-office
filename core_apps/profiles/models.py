@@ -32,10 +32,10 @@ class Profile(TimeStampedModel):
         )
 
     class ODKRole(models.TextChoices):
-        DATA_COLLECTOR = (
-            "data_collector",
-            _("Data Collector"),
-        )
+        # DATA_COLLECTOR = (
+        #     "data_collector",
+        #     _("Data Collector"),
+        # )
         INSUCO_USER = (
             "insuco_user",
             _("Insuco User"),

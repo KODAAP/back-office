@@ -68,13 +68,13 @@ class GenericJSONRenderer(JSONRenderer):
 
         # Pass error responses directly to the parent renderer
         # This preserves the error format from DRF
-        errors = data.get("errors", None)
+        errors = data.get("errors", None) if isinstance(data, dict) else None
         if errors is not None:
             return super(GenericJSONRenderer, self).render(data)
 
         # TODO: uncomment this and remove results key from list responses
-        # if isinstance(data, list):
-        #     data = {"results": data}
+        if isinstance(data, list):
+            data = data
 
         # Format successful responses with our standard structure
         formatted_response = {"status_code": status_code, object_label: data}

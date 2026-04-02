@@ -40,14 +40,14 @@ class ProjectSerializer(serializers.ModelSerializer):
             "archived",
         ]
 
-    def get_created_by_name(self, obj):
+    def get_created_by_name(self, obj) -> str:
         if obj.created_by and obj.created_by.get_full_name is not None:
             return obj.created_by.get_full_name
         elif obj.created_by:
             return obj.created_by.username
         return None
 
-    def get_permission_level(self, obj):
+    def get_permission_level(self, obj) -> str:
         target_user = self.context.get("target_user")
         if target_user:
             from core_apps.projects.services import get_user_permission_level

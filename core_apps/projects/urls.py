@@ -9,6 +9,7 @@ from core_apps.projects.views import (
     ProjectPermissionRevokeView,
     ProjectRestoreView,
     ProjectUnarchiveView,
+    UserAssignableProjectsListView,
     UserProjectListView,
 )
 
@@ -36,6 +37,11 @@ urlpatterns = [
         "<int:pkid>/permissions/<int:user_id>/revoke/",
         ProjectPermissionRevokeView.as_view(),
         name="revoke-permission",
+    ),
+    path(
+        "user/<int:user_id>/assignable/",
+        UserAssignableProjectsListView.as_view(),
+        name="user-assignable-projects-list",
     ),
     path(
         "user/<int:user_id>",

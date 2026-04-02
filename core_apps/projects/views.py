@@ -5,6 +5,8 @@ from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.utils import timezone
 
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from guardian.shortcuts import get_objects_for_user
 from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied
@@ -12,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core_apps.common.permissions import HasProjectPermission
+from core_apps.common.permissions_config import ADMIN_ROLES
 from core_apps.common.renderers import GenericJSONRenderer
 from core_apps.common.tasks import send_email_task
 from core_apps.common.utils import log_audit_action, truthy
@@ -23,6 +26,7 @@ from core_apps.projects.services import (
     revoke_project_permissions,
 )
 
+from ..profiles.views import StandardResultsSetPagination
 from .models import Projects
 from .serializers import (
     AssignProjectPermissionSerializer,
@@ -106,6 +110,79 @@ class ProjectListCreateView(generics.ListCreateAPIView):
         if not has_global_create and role not in ["administrator"]:
             raise PermissionDenied("Not allowed to create projects")
         serializer.save(created_by=user)
+
+
+class UserAssignableProjectsListView(APIView):
+    """
+    Vue pour lister les projets qui peuvent être assignés à un utilisateur spécifique.
+    GET: Liste tous les projets actifs (non supprimés, non archivés) auxquels l'utilisateur n'est pas encore assigné.
+    Le paramètre `user_id` doit être fourni dans l'URL ou en query param.
+    """
+
+    serializer_class = ProjectSerializer
+    renderer_classes = [GenericJSONRenderer]
+    object_label = "projects"
+
+    @swagger_auto_schema(
+        operation_description="Liste tous les projets actifs (non supprimés, non archivés) "
+        "auxquels l'utilisateur n'est pas encore assigné.",
+        responses={200: ProjectSerializer(many=True)},
+        manual_parameters=[
+            openapi.Parameter(
+                "user_id",
+                openapi.IN_QUERY,
+                description="ID de l'utilisateur cible (si non fourni dans l'URL)",
+                type=openapi.TYPE_INTEGER,
+            )
+        ],
+    )
+    def get(self, request, user_id=None, *args, **kwargs):
+        # Restriction aux administrateurs (ADMIN_ROLES)
+        user = request.user
+        role = getattr(getattr(user, "profile", None), "odk_role", None)
+        if role not in ADMIN_ROLES:
+            return Response(
+                {"detail": "You do not have permission to access this resource."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Récupérer l'ID de l'utilisateur cible depuis l'URL ou les paramètres de requête
+        target_user_id = user_id or request.query_params.get("user_id")
+
+        if not target_user_id:
+            return Response(
+                {"detail": "The user identifier (user_id) is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            target_user = get_user_model().objects.get(pkid=target_user_id)
+        except get_user_model().DoesNotExist:
+            return Response(
+                {"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        # 1. Récupérer tous les projets actifs (non supprimés, non archivés)
+        all_active_projects = Projects.objects.filter(deleted=False, archived=False)
+
+        # 2. Identifier les projets auxquels l'utilisateur cible a déjà accès via guardian
+        # On utilise 'access_project' comme permission de base pour l'assignation
+        assigned_projects = get_objects_for_user(
+            target_user, "projects.access_project", klass=Projects
+        )
+
+        # 3. Exclure les projets déjà assignés
+        assignable_projects = all_active_projects.exclude(
+            id__in=assigned_projects.values_list("id", flat=True)
+        )
+
+        # 4. Sérialiser et retourner la réponse
+        serializer = self.serializer_class(
+            assignable_projects,
+            many=True,
+            context={"request": request, "target_user": target_user},
+        )
+        return Response(serializer.data)
 
 
 class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -254,6 +331,25 @@ class ProjectPermissionAssignView(APIView):
     permission_classes = [HasProjectPermission]
     required_permission = "projects.manage_project"
 
+    @swagger_auto_schema(
+        operation_description="Assigne un niveau de permission spécifique sur un projet à un utilisateur.",
+        request_body=AssignProjectPermissionSerializer,
+        responses={
+            201: openapi.Response(
+                description="Permission assignée avec succès",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "user": openapi.Schema(type=openapi.TYPE_INTEGER),
+                        "project": openapi.Schema(type=openapi.TYPE_STRING),
+                        "permission_level": openapi.Schema(type=openapi.TYPE_STRING),
+                    },
+                ),
+            ),
+            400: "Requête invalide ou erreur d'assignation",
+            403: "Permission refusée",
+        },
+    )
     def post(self, request, pkid):
         project = get_object_or_404(Projects, pkid=pkid, deleted=False)
 
@@ -271,6 +367,10 @@ class ProjectPermissionAssignView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         user = User.objects.get(pkid=serializer.validated_data["user_id"])
+        if user.profile.odk_role == Profile.ODKRole.ADMINISTRATOR:
+            raise PermissionDenied(
+                "It is not possible to assign a project to an administrator."
+            )
         level = serializer.validated_data["permission_level"]
 
         try:
@@ -298,13 +398,25 @@ class ProjectPermissionRevokeView(APIView):
     permission_classes = [HasProjectPermission]
     required_permission = "projects.manage_project"
 
+    @swagger_auto_schema(
+        operation_description="Révoque toutes les permissions d'un utilisateur spécifique pour un projet.",
+        responses={
+            204: "Permissions révoquées avec succès",
+            403: "Impossible de révoquer les permissions d'un administrateur",
+            404: "Projet ou utilisateur non trouvé",
+        },
+    )
     def delete(self, request, pkid, user_id):
         project = get_object_or_404(Projects, pkid=pkid, deleted=False)
-
         # Object-level permission check via DRF permission class
         self.check_object_permissions(request, project)
 
         user = get_object_or_404(User, pkid=user_id)
+        # si user a odk_role = administrator, on ne peut pas le retirer de son projet
+        if user.profile.odk_role == Profile.ODKRole.ADMINISTRATOR:
+            raise PermissionDenied(
+                "It is not possible to revoke a project from an administrator."
+            )
         revoke_project_permissions(user, project)
 
         # Notify all administrators
@@ -347,6 +459,10 @@ class ProjectPermissionListView(APIView):
     permission_classes = [HasProjectPermission]
     required_permission = "projects.access_project"
 
+    @swagger_auto_schema(
+        operation_description="Liste tous les utilisateurs et leurs permissions assignées pour un projet spécifique.",
+        responses={200: ProjectPermissionUserSerializer(many=True)},
+    )
     def get(self, request, pkid):
         project = get_object_or_404(Projects, pkid=pkid, deleted=False)
 

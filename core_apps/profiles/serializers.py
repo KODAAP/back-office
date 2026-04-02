@@ -44,7 +44,7 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(source="user.last_name")
     username = serializers.CharField(source="user.username")
     country_of_origin = CountryField(name_only=True)
-    gender = serializers.ChoiceField(choices=Profile.Gender.choices, source="gender")
+    gender = serializers.ChoiceField(choices=Profile.Gender.choices)
     odk_role = serializers.CharField(read_only=True)
 
     class Meta:

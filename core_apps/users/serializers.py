@@ -17,15 +17,15 @@ class UserPermissionsSerializer(serializers.Serializer):
     globals = serializers.SerializerMethodField()
     projects = serializers.SerializerMethodField()
 
-    def get_globals(self, obj):
+    def get_globals(self, obj) -> list:
         return list(obj.get_all_permissions())
 
-    def get_is_admin(self, obj):
+    def get_is_admin(self, obj) -> bool:
         from core_apps.common.permissions_config import ADMIN_ROLES
 
         return obj.profile.odk_role in ADMIN_ROLES or obj.is_superuser
 
-    def get_projects(self, obj):
+    def get_projects(self, obj) -> list:
         """Returns the projects with their permission levels."""
         from core_apps.common.permissions_config import ADMIN_ROLES, PERMISSION_SETS
         from core_apps.projects.models import Projects
@@ -73,6 +73,7 @@ class CustomUserSerializer(UserSerializer):
     city = serializers.ReadOnlyField(source="profile.city_of_origin")
     avatar = serializers.ReadOnlyField(source="profile.avatar.url")
     permissions = UserPermissionsSerializer(source="*", read_only=True)
+    is_oauth_user = serializers.BooleanField(read_only=True)
 
     class Meta(UserSerializer.Meta):
         model = User
@@ -90,7 +91,8 @@ class CustomUserSerializer(UserSerializer):
             "city",
             "avatar",
             "date_joined",
-            "permissions",  # Nouveau champ
+            "is_oauth_user",
+            "permissions",
         ]
         read_only_fields = ["id", "email", "date_joined"]
 

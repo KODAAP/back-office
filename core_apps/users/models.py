@@ -35,3 +35,8 @@ class User(AbstractUser):
     def get_full_name(self) -> str:
         full_name = f"{self.first_name} {self.last_name}"
         return full_name.strip()
+
+    @property
+    def is_oauth_user(self) -> bool:
+        """Retourne True si l'utilisateur s'est connecté via OAuth (Google, etc.)."""
+        return hasattr(self, "social_auth") and self.social_auth.exists()

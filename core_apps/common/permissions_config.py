@@ -37,5 +37,5 @@ ROLE_ALLOWED_LEVELS = {
     "administrator": ["read", "submit", "contribute", "manage"],
     "manager": ["read", "submit", "contribute", "manage"],
     "insuco_user": ["read", "submit", "contribute"],
-    "data_collector": ["read", "submit"],
+    # "data_collector": ["read", "submit"],
 }
