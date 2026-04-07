@@ -2,8 +2,8 @@ from typing import Dict, Set
 
 # Mapping hiérarchique des niveaux de permissions
 PERMISSION_SETS: Dict[str, Set[str]] = {
-    "read": {"access_project", "view_form", "view_submission"},
-    "submit": {"access_project", "view_form", "view_submission", "add_submission"},
+    # "read": {"access_project", "view_form", "view_submission"},
+    # "submit": {"access_project", "view_form", "view_submission", "add_submission"},
     "contribute": {
         "access_project",
         "view_form",
@@ -34,8 +34,7 @@ ADMIN_ROLES = ["administrator"]
 
 # Mapping des rôles ODK vers les niveaux de permissions autorisés
 ROLE_ALLOWED_LEVELS = {
-    "administrator": ["read", "submit", "contribute", "manage"],
-    "manager": ["read", "submit", "contribute", "manage"],
-    "insuco_user": ["read", "submit", "contribute"],
-    # "data_collector": ["read", "submit"],
+    "administrator": ["manage"],
+    "manager": ["contribute", "manage"],
+    "insuco_user": ["contribute"],
 }
