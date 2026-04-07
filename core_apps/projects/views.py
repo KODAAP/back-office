@@ -124,8 +124,8 @@ class UserAssignableProjectsListView(APIView):
     object_label = "projects"
 
     @swagger_auto_schema(
-        operation_description="Liste tous les projets actifs (non supprimés, non archivés) "
-        "auxquels l'utilisateur n'est pas encore assigné.",
+        operation_description="""Liste tous les projets actifs (non supprimés, non archivés)
+        auxquels l'utilisateur n'est pas encore assigné.""",
         responses={200: ProjectSerializer(many=True)},
         manual_parameters=[
             openapi.Parameter(

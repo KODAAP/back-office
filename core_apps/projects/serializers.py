@@ -12,6 +12,7 @@ User = get_user_model()
 class ProjectSerializer(serializers.ModelSerializer):
     created_by_name = serializers.SerializerMethodField()
     permission_level = serializers.SerializerMethodField()
+    has_manager = serializers.SerializerMethodField()
 
     class Meta:
         model = Projects
@@ -26,6 +27,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             "created_by",
             "created_by_name",
             "permission_level",
+            "has_manager",
             "archived",
         ]
         read_only_fields = [
@@ -37,6 +39,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             "created_by",
             "created_by_name",
             "permission_level",
+            "has_manager",
             "archived",
         ]
 
@@ -54,6 +57,26 @@ class ProjectSerializer(serializers.ModelSerializer):
 
             return get_user_permission_level(target_user, obj)
         return None
+
+    def get_has_manager(self, obj) -> bool:
+        from guardian.shortcuts import get_users_with_perms
+
+        from core_apps.profiles.models import Profile
+
+        users_with_perms = get_users_with_perms(
+            obj, attach_perms=True, with_group_users=False
+        )
+        for user, perms in users_with_perms.items():
+            if "manage_project" in perms:
+                # Vérifier si l'utilisateur est un manager (et non un administrateur global)
+                # car les administrateurs ont accès à tout par défaut,
+                # mais "has_manager" implique généralement une attribution spécifique.
+                try:
+                    if user.profile.odk_role == Profile.ODKRole.MANAGER:
+                        return True
+                except Profile.DoesNotExist:
+                    continue
+        return False
 
     def create(self, validated_data):
         validated_data["created_by"] = self.context["request"].user
