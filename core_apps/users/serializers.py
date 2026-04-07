@@ -74,6 +74,7 @@ class CustomUserSerializer(UserSerializer):
     avatar = serializers.ReadOnlyField(source="profile.avatar.url")
     permissions = UserPermissionsSerializer(source="*", read_only=True)
     is_oauth_user = serializers.BooleanField(read_only=True)
+    last_login = serializers.SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
         model = User
@@ -91,10 +92,29 @@ class CustomUserSerializer(UserSerializer):
             "city",
             "avatar",
             "date_joined",
+            "last_login",
             "is_oauth_user",
             "permissions",
         ]
-        read_only_fields = ["id", "email", "date_joined"]
+        read_only_fields = ["id", "email", "date_joined", "last_login"]
+
+    def get_last_login(self, obj):
+        request = self.context.get("request")
+        if request and request.user:
+            from core_apps.common.permissions_config import ADMIN_ROLES
+
+            try:
+                if (
+                    request.user.is_superuser
+                    or request.user.profile.odk_role in ADMIN_ROLES
+                ):
+                    last = obj.last_login
+                    return last.isoformat() if last else None
+            except Profile.DoesNotExist:
+                if request.user.is_superuser:
+                    last = obj.last_login
+                    return last.isoformat() if last else None
+        return None
 
 
 class CreateUserSerializer(UserCreateSerializer):

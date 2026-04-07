@@ -13,6 +13,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     country_of_origin = CountryField(name_only=True)
     avatar = serializers.SerializerMethodField()
     date_joined = serializers.DateTimeField(source="user.date_joined", read_only=True)
+    last_login = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
@@ -29,6 +30,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "bio",
             "odk_role",
             "date_joined",
+            "last_login",
             "avatar",
         ]
 
@@ -37,6 +39,24 @@ class ProfileSerializer(serializers.ModelSerializer):
             return obj.avatar.url
         except AttributeError:
             return None
+
+    def get_last_login(self, obj: Profile):
+        request = self.context.get("request")
+        if request and request.user:
+            from core_apps.common.permissions_config import ADMIN_ROLES
+
+            try:
+                if (
+                    request.user.is_superuser
+                    or request.user.profile.odk_role in ADMIN_ROLES
+                ):
+                    last = obj.user.last_login
+                    return last.isoformat() if last else None
+            except Profile.DoesNotExist:
+                if request.user.is_superuser:
+                    last = obj.user.last_login
+                    return last.isoformat() if last else None
+        return None
 
 
 class UpdateProfileSerializer(serializers.ModelSerializer):
