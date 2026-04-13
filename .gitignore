@@ -9,7 +9,7 @@ env/
 *.log
 local_settings.py
 db.sqlite3
-
+.junie/
 staticfiles/
 .envs/.env.local
 .envs/.env.prod
