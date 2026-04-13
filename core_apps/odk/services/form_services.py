@@ -366,7 +366,7 @@ class ODKFormService(BaseODKService):
             )
             raise
 
-    def get_form_version_xml(self, project_id: int, form_id: str, version: str) -> str:
+    def get_form_version_xml(self, project_id: int, form_id: str, version: str):
         """Get XML for a specific form version"""
         try:
             xml_data = self._make_request(
@@ -379,6 +379,47 @@ class ODKFormService(BaseODKService):
         except Exception as e:
             self._log_action(
                 "get_form_version_xml",
+                "form",
+                f"{project_id}/{form_id}/{version}",
+                {
+                    "error": str(e),
+                    "odk_account": (
+                        self.current_account["id"] if self.current_account else None
+                    ),
+                },
+                success=False,
+            )
+            raise
+
+    def download_form_version_xlsx(
+        self, project_id: int, form_id: str, version: str
+    ) -> bytes:
+        """
+        Télécharge le fichier XLSX d'une version spécifique d'un formulaire
+
+        Args:
+            project_id (int): Identifiant numérique du projet ODK.
+            form_id (str): Identifiant XML du formulaire.
+            version (str): Numéro de version du formulaire (ex: "1", "2").
+
+        Returns:
+            bytes: Contenu binaire du fichier XLSX.
+
+        Raises:
+            ODKValidationError: En cas d'erreur de validation ODK.
+            Exception: Autres erreurs lors de la requête API.
+        """
+        try:
+            return self._make_request(
+                "GET",
+                f"projects/{project_id}/forms/{form_id}/versions/{version}.xlsx",
+                return_json=False,
+            )
+        except ODKValidationError:
+            raise
+        except Exception as e:
+            self._log_action(
+                "download_form_version_xlsx",
                 "form",
                 f"{project_id}/{form_id}/{version}",
                 {

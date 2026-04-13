@@ -10,6 +10,7 @@ from .form_views import (
     FormCreateView,
     FormDeleteView,
     FormDetailView,
+    FormVersionXLSXDownloadView,
     FormXLSXDownloadView,
     ProjectFormsListView,
 )
@@ -52,5 +53,6 @@ __all__ = [
     "MatrixView",
     "SubmissionsDataView",
     "FormXLSXDownloadView",
+    "FormVersionXLSXDownloadView",
     "SubmissionsZipView",
 ]

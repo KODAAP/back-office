@@ -92,8 +92,8 @@ class FormCreateView(APIView):
                     ODKCacheManager.invalidate_project_cache(
                         request.user.id, odk_project_id
                     )
-                    if not form.get("version"):
-                        form["version"] = "1.0"
+                    # if not form.get("version"):
+                    #     form["version"] = "1.0"
                     return Response({"form": form}, status=status.HTTP_201_CREATED)
                 except ODKValidationError as e:
                     if created_new_odk_project:
@@ -312,5 +312,45 @@ class FormXLSXDownloadView(ProjectValidationMixin, APIView):
                 )
             return Response(
                 {"error": "Unable to download form XLSX", "detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class FormVersionXLSXDownloadView(ProjectValidationMixin, APIView):
+    """Télécharge le fichier XLSX d'une version spécifique d'un formulaire depuis ODK Central et le diffuse au client."""
+
+    def get(self, request, project_id: int, form_id: str, version: str):
+        project, error_response = self.validate_project(project_id)
+        if error_response:
+            return error_response
+
+        odk_project_id, odk_error = self.validate_odk_association(project)
+        if odk_error:
+            return odk_error
+
+        try:
+            with ODKCentralService(request.user, request=request) as odk_service:
+                content = odk_service.download_form_version_xlsx(
+                    odk_project_id, form_id, version
+                )
+                filename = (
+                    request.query_params.get("filename") or f"{form_id}_v{version}.xlsx"
+                )
+
+                response = HttpResponse(
+                    content,
+                    content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
+                response["Content-Disposition"] = f'attachment; filename="{filename}"'
+                return response
+        except Exception as e:
+            msg = str(e).lower()
+            if "404" in msg or "not found" in msg:
+                return Response(
+                    {"error": "Form version or XLSX not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            return Response(
+                {"error": "Unable to download form version XLSX", "detail": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )

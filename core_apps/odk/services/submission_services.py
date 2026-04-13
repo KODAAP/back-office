@@ -142,3 +142,28 @@ class ODKSubmissionService(BaseODKService):
                 },
                 success=False,
             )
+
+    # def get_edit_link(
+    #     self,
+    #     project_id: int,
+    #     form_id: str,
+    #     instance_id: str,
+    #     local: bool = True,
+    #     return_url: Optional[str] = None,
+    # ) -> str:
+    #     """
+    #     Génère un lien de modification pour une soumission.
+    #     Par défaut, utilise l'Enketo local pour une meilleure intégration.
+    #     """
+    #     if local:
+    #         enketo_service = LocalEnketoService()
+    #         return enketo_service.get_edit_url(
+    #             self.base_url, form_id, instance_id, return_url=return_url
+    #         )
+    #     else:
+    #         # Utilise l'API ODK Central pour l'Enketo en ligne
+    #         result = self._make_request(
+    #             "POST",
+    #             f"projects/{project_id}/forms/{form_id}/submissions/{instance_id}/edit",
+    #         )
+    #         return result.get("url")

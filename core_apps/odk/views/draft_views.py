@@ -108,7 +108,7 @@ class FormDraftView(APIView):
                         max_ver = max(float(v["version"]) for v in versions)
                         next_version = f"{max_ver + 0.1:.1f}"  # e.g. "1.1" → "1.2"
                     else:
-                        next_version = "1"
+                        next_version = "1.0"
                     odk_service.publish_draft(odk_project_id, form_id, next_version)
 
                 ODKCacheManager.invalidate_project_cache(
@@ -179,7 +179,7 @@ class FormDraftPublishView(APIView):
                 {"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        version = request.data.get("version")
+        version = request.data.get("version", "1.0")
 
         try:
             with ODKCentralService(request.user, request=request) as odk_service:
