@@ -9,6 +9,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     user_id = serializers.ReadOnlyField(source="user.pkid")
     last_name = serializers.ReadOnlyField(source="user.last_name")
     username = serializers.ReadOnlyField(source="user.username")
+    email = serializers.ReadOnlyField(source="user.email")
     full_name = serializers.ReadOnlyField(source="user.get_full_name")
     country_of_origin = CountryField(name_only=True)
     avatar = serializers.SerializerMethodField()
@@ -23,6 +24,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "username",
+            "email",
             "full_name",
             "gender",
             "country_of_origin",
