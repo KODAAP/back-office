@@ -96,7 +96,7 @@ def get_user_permission_level(user, project):
         return "manage"
 
     # Vérifier du niveau le plus élevé au plus bas
-    for level in ["manage", "contribute", "submit", "read"]:
+    for level in ["manage", "contribute"]:
         perms = PERMISSION_SETS[level]
         app_label = Projects._meta.app_label
         if all(user.has_perm(f"{app_label}.{perm}", project) for perm in perms):
