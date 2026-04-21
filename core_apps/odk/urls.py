@@ -6,6 +6,8 @@ from core_apps.odk.views import (
     AppUserRevokeView,
     AppUsersFormView,
     CreateListAccessView,
+    EnketoFormPreviewView,
+    EnketoSubmissionEditView,
     FormCreateView,
     FormDeleteView,
     FormDetailView,
@@ -90,6 +92,17 @@ urlpatterns = [
         "projects/<int:project_id>/forms/<str:form_id>/submissions/<str:instance_id>/",
         FormSubmissionDetailView.as_view(),
         name="form-submission-detail",
+    ),
+    # Enketo integration
+    path(
+        "projects/<int:project_id>/forms/<str:form_id>/preview-url/",
+        EnketoFormPreviewView.as_view(),
+        name="form-preview-url",
+    ),
+    path(
+        "projects/<int:project_id>/forms/<str:form_id>/submissions/<str:instance_id>/edit-url/",
+        EnketoSubmissionEditView.as_view(),
+        name="submission-edit-url",
     ),
     # App Users
     path(

@@ -494,6 +494,9 @@ class UserProjectListView(generics.ListAPIView):
     permission_classes = [HasProjectPermission]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Projects.objects.none()
+
         user_id = self.kwargs.get("user_id")
         target_user = get_object_or_404(User, pkid=user_id)
         # Get projects where the target user has 'access_project' permission
@@ -526,6 +529,10 @@ class UserProjectListView(generics.ListAPIView):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
+
+        if getattr(self, "swagger_fake_view", False):
+            return context
+
         user_id = self.kwargs.get("user_id")
         target_user = get_object_or_404(User, pkid=user_id)
         context["target_user"] = target_user

@@ -6,6 +6,10 @@ from .draft_views import (
     FormVersionsView,
     FormVersionXMLView,
 )
+from .enketo_views import (  # EnketoFormSurveyView,
+    EnketoFormPreviewView,
+    EnketoSubmissionEditView,
+)
 from .form_views import (
     FormCreateView,
     FormDeleteView,
@@ -55,4 +59,7 @@ __all__ = [
     "FormXLSXDownloadView",
     "FormVersionXLSXDownloadView",
     "SubmissionsZipView",
+    # "EnketoFormSurveyView",
+    "EnketoFormPreviewView",
+    "EnketoSubmissionEditView",
 ]

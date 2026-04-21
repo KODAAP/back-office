@@ -331,15 +331,13 @@ ANONYMOUS_USER_NAME = "AnonymousUser"
 GUARDIAN_RENDER_403 = True
 
 # ODK Central Settings
-ODK_CENTRAL_URL = getenv("ODK_CENTRAL_URL", "https://odk.insuco.net/v1")
+ODK_CENTRAL_URL = getenv("ODK_CENTRAL_URL")
 ODK_MAX_RETRIES = 5
 ODK_REQUEST_TIMEOUT = 120
 
-# Local Enketo Settings
-ENKETO_API_URL = getenv("ENKETO_API_URL", "http://enketo:8005/api/v2")
-ENKETO_API_KEY = getenv(
-    "ENKETO_API_KEY", "dev-api-key-changez-moi-en-prod-32-caracteres-min"
-)
+# Enketo Settings
+ENKETO_API_URL = getenv("ENKETO_API_URL", "http://enketo:8005/-/api/v2")
+ENKETO_API_KEY = "c1a0f27879bb6a428f83679befd11b8a5536ecff3b9b3910acd18a43002b1923"
 ENKETO_PUBLIC_BASE_URL = getenv("ENKETO_PUBLIC_BASE_URL", "http://localhost:8080")
 
 # DJANGO_ODATA = {
