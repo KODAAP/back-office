@@ -8,7 +8,7 @@ class ODKSubmissionService(BaseODKService):
     """Service pour la gestion des soumissions ODK"""
 
     def get_form_submissions(self, project_id: int, form_id: str) -> List[Dict]:
-        """Récupère les soumissions d'un formulaire spécifique"""
+        """Récupère les soumissions d'un formulaire spécifique, juste les metadata des soumissions"""
         try:
             return self._make_request(
                 "GET",
@@ -93,12 +93,15 @@ class ODKSubmissionService(BaseODKService):
             )
             raise
 
-    def submissions_data(self, project_id: int, form_id: str):
+    def submissions_data(self, project_id: int, form_id: str, expand: bool = False):
         try:
             headers = {"content-type": "application/json"}
+            url = f"projects/{project_id}/forms/{form_id}.svc/Submissions"
+            if expand:
+                url += "?$expand=*"
             return self._make_request(
                 "GET",
-                f"projects/{project_id}/forms/{form_id}.svc/Submissions?$expand=*",
+                url,
                 headers=headers,
             )
         except ODKValidationError:
@@ -116,6 +119,55 @@ class ODKSubmissionService(BaseODKService):
                 },
                 success=False,
             )
+
+    def submission_repeat_data(
+        self, project_id: int, form_id: str, repeat_name: str, instance_id: str = None
+    ):
+        try:
+            headers = {"content-type": "application/json"}
+
+            if instance_id:
+                # On retire le préfixe "Submissions." si présent pour la syntaxe de navigation
+                clean_name = repeat_name
+                if clean_name.startswith("Submissions."):
+                    clean_name = clean_name[len("Submissions.") :]
+
+                # Format: Submissions('uuid:...')/repeat_name
+                url = f"projects/{project_id}/forms/{form_id}.svc/Submissions('{instance_id}')/{clean_name}"
+            else:
+                # Fallback standard pour la liste complète (ex: Submissions.demographic)
+                endpoint = (
+                    repeat_name
+                    if repeat_name.startswith("Submissions")
+                    else f"Submissions.{repeat_name}"
+                )
+                url = f"projects/{project_id}/forms/{form_id}.svc/{endpoint}"
+
+            return self._make_request(
+                "GET",
+                url,
+                headers=headers,
+            )
+        except ODKValidationError:
+            raise
+        except Exception as e:
+            self._log_action(
+                "submission_repeat_data",
+                "submission",
+                f"project:{project_id}| form:{form_id}|{repeat_name} | instance:{instance_id}",
+                {
+                    "error": str(e),
+                },
+                success=False,
+            )
+
+    def form_repeat_list(self, project_id: int, form_id: str):
+        try:
+            return self._make_request(
+                "GET", f"projects/{project_id}/forms/{form_id}.svc"
+            )
+        except ODKValidationError:
+            raise
 
     def zip_submissions(self, project_id: int, form_id: str):
         try:

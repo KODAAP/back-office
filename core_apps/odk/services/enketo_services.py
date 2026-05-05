@@ -5,6 +5,8 @@ from django.conf import settings
 
 import requests
 
+from core_apps.odk.models import ODKUserSessions
+
 from .base_service import BaseODKService
 from .exceptions import ODKValidationError
 
@@ -42,21 +44,6 @@ class EnketoService(BaseODKService):
         # Authentification Basic Auth avec l'API key comme username
         # Enketo Express attend: Authorization: Basic base64(api_key:)
         self.auth = (self.api_key, "")
-
-    def _clean_server_url(self, server_url: str) -> str:
-        """Normalise l'URL ODK Central attendue par Enketo.
-
-        Enketo Express attend généralement l'URL de base d'ODK Central sans le
-        suffixe `/v1`. Cette méthode retire ce suffixe lorsqu'il est présent,
-        en ciblant uniquement `/v1` en fin d'URL.
-
-        Args:
-            server_url (str): URL du serveur ODK Central (ex: `https://odk.exemple.tld/v1`).
-
-        Returns:
-            str: URL de base sans `/v1` (ex: `https://odk.exemple.tld`).
-        """
-        return re.sub(r"/v1/?$", "", server_url.rstrip("/"))
 
     def _is_json_response(self, response):
         """Vérifie si la réponse est du JSON valide."""
@@ -168,48 +155,6 @@ class EnketoService(BaseODKService):
             )
             raise
 
-    # def check_connection(self):
-    #     """
-    #     Vérifie la connexion avec le serveur Enketo.
-    #     """
-    #     # Construire l'URL de base (peut inclure /-/ selon la config)
-    #     base_url = self.api_url
-    #     try:
-    #         # Test simple: faire un HEAD sur l'URL de base pour vérifier connectivité
-    #         response = requests.head(base_url, auth=self.auth, timeout=5, allow_redirects=True)
-    #         if response.status_code < 400:
-    #             return {
-    #                 "success": True,
-    #                 "message": "Connexion à Enketo réussie.",
-    #                 "data": {"status_code": response.status_code}
-    #             }
-    #         else:
-    #             # Essayer l'URL alternative avec /-/
-    #             if "/-/" not in base_url:
-    #                 alt_url = base_url.replace("/api/v2", "/-/api/v2")
-    #                 alt_response = requests.head(alt_url, auth=self.auth, timeout=5, allow_redirects=True)
-    #                 if alt_response.status_code < 400:
-    #                     return {
-    #                         "success": True,
-    #                         "message": "Connexion à Enketo réussie (URL alternative).",
-    #                         "data": {"status_code": alt_response.status_code}
-    #                     }
-    #             return {
-    #                 "success": False,
-    #                 "message": f"Enketo a répondu avec le statut {response.status_code}",
-    #                 "status_code": response.status_code
-    #             }
-    #     except requests.exceptions.ConnectionError as e:
-    #         return {
-    #             "success": False,
-    #             "message": f"Impossible de joindre Enketo: {str(e)}"
-    #         }
-    #     except Exception as e:
-    #         return {
-    #             "success": False,
-    #             "message": f"Échec de la connexion réseau à Enketo : {str(e)}"
-    #         }
-
     def _get_enketo_url(
         self,
         endpoint: str,
@@ -240,8 +185,6 @@ class EnketoService(BaseODKService):
             raise ODKValidationError(
                 "Le paramètre 'form_id' est requis et ne peut pas être vide."
             )
-
-        server_url = self._clean_server_url(server_url)
         payload = {"server_url": server_url, "form_id": form_id}
 
         if instance_id:
@@ -263,7 +206,47 @@ class EnketoService(BaseODKService):
             )
 
         # Remplacement de l'hôte interne par l'hôte public
-        return re.sub(r"https?://[^/]+", self.public_base_url, url)
+        url = re.sub(r"https?://[^/]+", self.public_base_url, url)
+
+        # Injection du token de session ODK pour éviter la ré-authentification.
+        # Enketo transmet le paramètre `st` aux requêtes vers ODK Central
+        # grâce à la config "query parameter to pass to submission": "st".
+        url = self._append_session_token(url)
+
+        return url
+
+    def _append_session_token(self, url: str) -> str:
+        """Ajoute le token de session ODK à l'URL Enketo.
+
+        Récupère le token Bearer stocké dans ODKUserSessions pour
+        l'utilisateur Django courant et l'ajoute en paramètre `st`.
+        Cela permet à l'utilisateur d'accéder directement au formulaire
+        Enketo sans ré-authentification sur ODK Central.
+
+        Args:
+            url: URL Enketo à enrichir.
+
+        Returns:
+            URL avec le paramètre `st` si un token valide existe,
+            URL inchangée sinon.
+        """
+        if not self.django_user:
+            return url
+
+        try:
+            session = ODKUserSessions.objects.get(user=self.django_user)
+            if not session.is_valid():
+                logger.warning(
+                    "Token ODK expiré pour l'utilisateur %s", self.django_user
+                )
+                return url
+
+            separator = "&" if "?" in url else "?"
+            return f"{url}{separator}st={session.odk_token}"
+
+        except ODKUserSessions.DoesNotExist:
+            logger.warning("Pas de session ODK pour l'utilisateur %s", self.django_user)
+            return url
 
     def get_edit_link(
         self,

@@ -14,6 +14,7 @@ from core_apps.odk.views import (
     FormDraftPublishView,
     FormDraftSubmissionsView,
     FormDraftView,
+    FormRepeatListView,
     FormSubmissionDetailView,
     FormSubmissionsExportView,
     FormSubmissionsListView,
@@ -26,6 +27,7 @@ from core_apps.odk.views import (
     ProjectFormsListView,
     RevokeAccessLinkView,
     SubmissionsDataView,
+    SubmissionSpecificRepeatDataView,
     SubmissionsZipView,
 )
 
@@ -71,6 +73,11 @@ urlpatterns = [
         FormSubmissionsListView.as_view(),
         name="submissions-list",
     ),
+    path(
+        "projects/<int:project_id>/forms/<str:form_id>/repeats",
+        FormRepeatListView.as_view(),
+        name="form-repeats-list",
+    ),
     # Submissions CSV export JSON
     path(
         "projects/<int:project_id>/forms/<str:form_id>/submissions.csv",
@@ -92,6 +99,11 @@ urlpatterns = [
         "projects/<int:project_id>/forms/<str:form_id>/submissions/<str:instance_id>/",
         FormSubmissionDetailView.as_view(),
         name="form-submission-detail",
+    ),
+    path(
+        "projects/<int:project_id>/forms/<str:form_id>/submissions/<str:instance_id>/repeats/<str:repeat_name>",
+        SubmissionSpecificRepeatDataView.as_view(),
+        name="submission-repeat-data",
     ),
     # Enketo integration
     path(

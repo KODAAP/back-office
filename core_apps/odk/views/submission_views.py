@@ -138,7 +138,7 @@ class SubmissionsDataView(ProjectValidationMixin, APIView):
             return {
                 k: SubmissionsDataView.clean_odk_keys(v)
                 for k, v in obj.items()
-                if not (k.startswith("__") or k.startswith("@odata") or "@odata" in k)
+                if not (k.startswith("@odata") or "@odata" in k)
             }
         elif isinstance(obj, list):
             return [SubmissionsDataView.clean_odk_keys(x) for x in obj]
@@ -158,8 +158,9 @@ class SubmissionsDataView(ProjectValidationMixin, APIView):
                         status=status.HTTP_404_NOT_FOUND,
                     )
 
+                expand = request.query_params.get("expand", "false").lower() == "true"
                 data = SubmissionsDataView.clean_odk_keys(
-                    odk_service.submissions_data(odk_id, form_id)
+                    odk_service.submissions_data(odk_id, form_id, expand=expand)
                 )
                 return Response(data, status=status.HTTP_200_OK)
         except Exception as e:
@@ -194,5 +195,81 @@ class SubmissionsZipView(ProjectValidationMixin, APIView):
             logger.error(f"Error getting submissions data: {e}")
             return Response(
                 {"error": "Unable to get submissions data", "detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class FormRepeatListView(ProjectValidationMixin, APIView):
+
+    def get(self, request, project_id, form_id):
+        """Retrieve list of repeats (tables) for a specific form"""
+        django_project, error_response = self.validate_project(project_id)
+        if error_response:
+            return error_response
+        try:
+            with ODKCentralService(request.user, request=request) as odk_service:
+                odk_project_id = django_project.odk_id
+                if not odk_project_id:
+                    return Response(
+                        {"error": "ODK project not found"},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
+                odk_response = odk_service.form_repeat_list(odk_project_id, form_id)
+
+                # Transformation de la réponse
+                repeats = []
+                # ODK Central renvoie généralement les entités dans la clé 'value'
+                raw_repeats = (
+                    odk_response.get("value", [])
+                    if isinstance(odk_response, dict)
+                    else []
+                )
+
+                for item in raw_repeats:
+                    original_name = item.get("name", "")
+                    # Split par le point et garde le dernier élément
+                    name_parts = original_name.split(".")
+                    display_name = name_parts[-1] if name_parts else original_name
+
+                    repeats.append({"name": display_name, "path": item.get("url")})
+
+                return Response({"repeats": repeats}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error getting form repeats: {e}")
+            return Response(
+                {"error": "Unable to get form repeats", "detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class SubmissionSpecificRepeatDataView(ProjectValidationMixin, APIView):
+
+    def get(self, request, project_id, form_id, instance_id, repeat_name):
+        """Retrieve repeat data for a specific submission instance"""
+        project, error_response = self.validate_project(project_id)
+        if error_response:
+            return error_response
+        try:
+            with ODKCentralService(request.user, request=request) as odk_service:
+                odk_id = project.odk_id
+                if not odk_id:
+                    return Response(
+                        {"error": "ODK project not found"},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
+
+                # On récupère le path du repeat depuis les query params si présent, sinon le nom
+                repeat_path = request.query_params.get("path", repeat_name)
+
+                data = SubmissionsDataView.clean_odk_keys(
+                    odk_service.submission_repeat_data(
+                        odk_id, form_id, repeat_path, instance_id=instance_id
+                    )
+                )
+                return Response(data, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error getting specific repeat data: {e}")
+            return Response(
+                {"error": "Unable to get repeat data", "detail": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
