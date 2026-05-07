@@ -2,7 +2,7 @@ import logging
 
 from django.db import transaction
 
-from rest_framework import status
+from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -18,6 +18,15 @@ from core_apps.invitations.serializers import (
 from core_apps.users.models import User
 
 logger = logging.getLogger(__name__)
+
+
+class InvitationListView(generics.ListAPIView):
+    """Liste des invitations"""
+
+    queryset = UserInvitation.objects.all()
+    serializer_class = InvitationSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = None
 
 
 class SendInvitationView(APIView):

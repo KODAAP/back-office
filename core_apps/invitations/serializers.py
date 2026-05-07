@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from rest_framework import serializers
 
 from core_apps.invitations.models import UserInvitation
@@ -7,10 +9,27 @@ from core_apps.users.models import User
 class InvitationSerializer(serializers.ModelSerializer):
     """Serializer pour afficher les informations d'une invitation"""
 
+    status = serializers.SerializerMethodField()
+
     class Meta:
         model = UserInvitation
-        fields = ["id", "email", "created_at", "expires_at", "is_used"]
-        read_only_fields = ["id", "created_at", "expires_at", "is_used"]
+        fields = [
+            "id",
+            "email",
+            "created_at",
+            "expires_at",
+            "is_used",
+            "used_at",
+            "status",
+        ]
+        read_only_fields = ["id", "created_at", "expires_at", "is_used", "used_at"]
+
+    def get_status(self, obj):
+        if obj.is_used:
+            return "accepted"
+        if obj.expires_at < timezone.now():
+            return "expired"
+        return "pending"
 
 
 class SendInvitationSerializer(serializers.Serializer):
