@@ -129,3 +129,26 @@ class UpdateODKRoleSerializer(UserSerializer):
     class Meta:
         model = Profile
         fields = ["odk_role"]
+
+
+class UserDashboardSerializer(serializers.Serializer):
+    """
+    Serializer pour les statistiques du tableau de bord des utilisateurs.
+
+    Attributes:
+        total_users (int): Nombre total d'utilisateurs.
+        users_variation_count (int): Variation du nombre d'utilisateurs par rapport au mois dernier.
+        active_users (int): Nombre d'utilisateurs actifs.
+        active_rate (float): Taux d'utilisateurs actifs (en pourcentage).
+        total_admins (int): Nombre total d'administrateurs.
+        admins_rate (float): Taux d'administrateurs (en pourcentage).
+        pending_invites (int): Nombre d'invitations en attente.
+    """
+
+    total_users = serializers.IntegerField()
+    users_variation_count = serializers.IntegerField()
+    active_users = serializers.IntegerField()
+    active_rate = serializers.FloatField()
+    total_admins = serializers.IntegerField()
+    admins_rate = serializers.FloatField()
+    pending_invites = serializers.IntegerField()

@@ -1,16 +1,24 @@
 import logging
+from datetime import timedelta
 from typing import Optional
 
 from django.conf import settings
 from django.core.mail import send_mail
+from django.utils import timezone
 
 from djoser.social.views import ProviderAuthView
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+from core_apps.common.permissions import CanChangeODKRole
+from core_apps.invitations.models import UserInvitation
+from core_apps.profiles.models import Profile
+from core_apps.users.models import User
+from core_apps.users.serializers import UserDashboardSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -162,3 +170,60 @@ class LogoutAPIView(APIView):
         response.delete_cookie("refresh")
         response.delete_cookie("logged_in")
         return response
+
+
+class UserDashboardView(APIView):
+    """
+    Vue retournant les KPIs pour le dashboard utilisateur.
+
+    Cette vue calcule le nombre total d'utilisateurs, la variation mensuelle,
+    les utilisateurs actifs, le nombre d'administrateurs et les invitations en attente.
+    """
+
+    permission_classes = [IsAuthenticated, CanChangeODKRole]
+
+    def get(self, request: Request) -> Response:
+        """
+        Récupère les statistiques du dashboard.
+
+        Args:
+            request (Request): L'objet de la requête.
+
+        Returns:
+            Response: Les statistiques formatées via UserDashboardSerializer.
+        """
+        now = timezone.now()
+        last_month = now - timedelta(days=30)
+
+        # 1. Total Users & Variation
+        total_users = User.objects.count()
+        users_last_month = User.objects.filter(date_joined__lte=last_month).count()
+        variation = total_users - users_last_month
+
+        # 2. Active Users
+        active_users_count = User.objects.filter(is_active=True).count()
+        active_rate = (active_users_count / total_users * 100) if total_users > 0 else 0
+
+        # 3. Administrators
+        admin_count = Profile.objects.filter(
+            odk_role=Profile.ODKRole.ADMINISTRATOR
+        ).count()
+        admin_rate = (admin_count / total_users * 100) if total_users > 0 else 0
+
+        # 4. Pending Invites (Non expirées et non utilisées)
+        pending_invites = UserInvitation.objects.filter(
+            expires_at__gt=now, is_used=False
+        ).count()
+
+        data = {
+            "total_users": total_users,
+            "users_variation_count": variation,
+            "active_users": active_users_count,
+            "active_rate": round(active_rate, 2),
+            "total_admins": admin_count,
+            "admins_rate": round(admin_rate, 2),
+            "pending_invites": pending_invites,
+        }
+
+        serializer = UserDashboardSerializer(data)
+        return Response(serializer.data, status=status.HTTP_200_OK)

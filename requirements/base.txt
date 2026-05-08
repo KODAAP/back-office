@@ -27,6 +27,8 @@ google-auth-oauthlib==1.0.0
 google-auth==2.23.3
 whitenoise==6.5.0
 pandas==2.3.3
+geopandas==1.1.3
+fiona==1.10.1
 xlsxwriter
 segno==1.6.6
 django-odata==0.1.0

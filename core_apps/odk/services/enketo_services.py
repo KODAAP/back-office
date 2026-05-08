@@ -102,18 +102,6 @@ class EnketoService(BaseODKService):
             # Log du statut de la réponse
             logger.info(f"Réponse Enketo API [{response.status_code}] sur {url}")
 
-            # Si on a une 404, et que l'URL ne contient pas /-/ alors que base path est -,
-            # on tente une alternative (cas spécifique de certaines configs Enketo Express)
-            if response.status_code == 404 and "/-/" not in url:
-                alt_url = url.replace("/api/v2", "/-/api/v2")
-                logger.info(f"404 reçu. Tentative alternative avec /-/ : {alt_url}")
-                alt_response = requests.request(
-                    method, alt_url, auth=self.auth, timeout=timeout, **kwargs
-                )
-                if alt_response.status_code < 400:
-                    logger.info(f"Succès avec l'URL alternative: {alt_url}")
-                    return self._parse_json_response(alt_response, alt_url)
-
             # Analyse de la réponse en cas d'erreur
             if response.status_code >= 400:
                 error_content = response.text

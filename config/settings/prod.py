@@ -102,3 +102,17 @@ LOGGING = {
         },
     },
 }
+
+
+ENKETO_ENCRYPTION_KEY = getenv("ENKETO_ENCRYPTION_KEY")
+ENKETO_LESS_SECURE_ENCRYPTION_KEY = getenv("ENKETO_LESS_SECURE_ENCRYPTION_KEY")
+
+if (
+    not ENKETO_API_KEY
+    or not ENKETO_ENCRYPTION_KEY
+    or not ENKETO_LESS_SECURE_ENCRYPTION_KEY
+):
+    raise ValueError(
+        "ENKETO_API_KEY, ENKETO_ENCRYPTION_KEY, and ENKETO_LESS_SECURE_ENCRYPTION_KEY must be \
+        set in production environment variables."
+    )
