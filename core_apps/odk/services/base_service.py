@@ -287,12 +287,12 @@ class BaseODKService:
         )
 
     def _log_action(
-            self,
-            action: str,
-            resource_type: str,
-            resource_id: str | int,
-            details: dict,
-            success: bool = True,
+        self,
+        action: str,
+        resource_type: str,
+        resource_id: str | int,
+        details: dict,
+        success: bool = True,
     ) -> None:
         """
         Journalise une action dans le journal d'audit.
@@ -316,7 +316,9 @@ class BaseODKService:
             return_json=False,
         )
 
-    def _get_field_info(self, project_id: int, form_id: str) -> Dict[str, Dict[str, str]]:
+    def _get_field_info(
+        self, project_id: int, form_id: str
+    ) -> Dict[str, Dict[str, str]]:
         """
         Parse le XLSForm pour extraire le type et le label de chaque champ.
         Retourne un dict: field_path -> {"type": "...", "label": "..."}
@@ -346,7 +348,7 @@ class BaseODKService:
             node_type = node.get("type")
             name = node.get("name", "")
             full_path = f"{path}/{name}" if path and name else name
-            
+
             label = _extract_label(node.get("label"), name)
 
             if node_type and node_type != "survey" and name:

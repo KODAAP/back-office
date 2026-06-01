@@ -14,10 +14,10 @@ from .base_service import BaseODKService
 class ODKExportService(BaseODKService):
 
     def _get_labels_and_choices(
-            self,
-            project_id: int,
-            form_id: str,
-            language: Optional[str] = None,
+        self,
+        project_id: int,
+        form_id: str,
+        language: Optional[str] = None,
     ) -> Tuple[Dict[str, str], Dict[str, Dict[str, str]], Dict[str, str]]:
         """
         Parse le XLSForm pour extraire:
@@ -44,9 +44,9 @@ class ODKExportService(BaseODKService):
                 return name
             if isinstance(node_label, list) and node_label:
                 if language:
-                    for l in node_label:
-                        if l.get("@xml:lang") == language:
-                            return l.get("#text", name)
+                    for lang_item in node_label:
+                        if lang_item.get("@xml:lang") == language:
+                            return lang_item.get("#text", name)
                 return node_label[0].get("#text", name)
             return str(node_label)
 
@@ -92,13 +92,13 @@ class ODKExportService(BaseODKService):
         return name or "sheet"
 
     def export_smart_excel(
-            self,
-            project_id: int,
-            form_id: str,
-            remove_group_prefix: bool = True,
-            include_labels: bool = True,
-            include_choice_labels: bool = False,
-            language: Optional[str] = None,
+        self,
+        project_id: int,
+        form_id: str,
+        remove_group_prefix: bool = True,
+        include_labels: bool = True,
+        include_choice_labels: bool = False,
+        language: Optional[str] = None,
     ) -> Tuple[bytes, str]:
         """Export Excel multi-onglets : main + repeats, avec options labels/nettoyage/choix."""
         # Retrieve labels, choices, and field->list_name mapping
@@ -178,7 +178,7 @@ class ODKExportService(BaseODKService):
     # ─────────────────────────────────────────────────────────────────────────
 
     def _get_submissions_zip_with_attachments(
-            self, project_id: int, form_id: str
+        self, project_id: int, form_id: str
     ) -> bytes:
         """
         Télécharge le ZIP ODK Central incluant les pièces jointes.
@@ -191,9 +191,9 @@ class ODKExportService(BaseODKService):
         )
 
     def export_zip_structured_media_only(
-            self,
-            project_id: int,
-            form_id: str,
+        self,
+        project_id: int,
+        form_id: str,
     ) -> Tuple[bytes, str]:
         """
         US 10 — Export ZIP structuré contenant UNIQUEMENT les pièces jointes (sans CSV).
@@ -398,7 +398,7 @@ class ODKExportService(BaseODKService):
         return Polygon(coords) if len(coords) >= 3 else None
 
     def _truncate_dbf_columns(
-            self, df: pd.DataFrame
+        self, df: pd.DataFrame
     ) -> Tuple[pd.DataFrame, Dict[str, str]]:
         """
         Tronque les noms de colonnes à 10 caractères (limite DBF).
@@ -423,11 +423,11 @@ class ODKExportService(BaseODKService):
         return df, mapping
 
     def _build_geodataframe_for_column(
-            self,
-            df: pd.DataFrame,
-            geo_col: str,
-            geo_type: str,
-            geo_cols_all: Dict[str, str],
+        self,
+        df: pd.DataFrame,
+        geo_col: str,
+        geo_type: str,
+        geo_cols_all: Dict[str, str],
     ):
         """
         Construit un GeoDataFrame pour une colonne géographique donnée.
@@ -478,9 +478,9 @@ class ODKExportService(BaseODKService):
         return result
 
     def export_shapefile(
-            self,
-            project_id: int,
-            form_id: str,
+        self,
+        project_id: int,
+        form_id: str,
     ) -> Tuple[bytes, str]:
         """
         Structure produite dans le ZIP :
@@ -512,9 +512,9 @@ class ODKExportService(BaseODKService):
 
         readme_lines: List[str] = [
             f"Export Shapefile — Formulaire : {form_id}",
-            f"Projection : WGS84 (EPSG:4326)",
-            f"Encodage : UTF-8",
-            f"Structure : Table / Type de géométrie / Fichiers",
+            "Projection : WGS84 (EPSG:4326)",
+            "Encodage : UTF-8",
+            "Structure : Table / Type de géométrie / Fichiers",
             "",
             "Couches disponibles :",
         ]
