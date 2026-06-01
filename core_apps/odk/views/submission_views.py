@@ -1,6 +1,8 @@
+import io
 import logging
+from io import BytesIO
 
-from django.http import HttpResponse
+from django.http import FileResponse, HttpResponse
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -8,10 +10,20 @@ from rest_framework.views import APIView
 
 from core_apps.common.renderers import GenericJSONRenderer
 from core_apps.odk.mixins import ProjectValidationMixin
+from core_apps.odk.models import Export
 from core_apps.odk.services import ODKCentralService
 from core_apps.odk.services.exceptions import ODKValidationError
+from core_apps.odk.tasks import generate_export_task
 
 logger = logging.getLogger(__name__)
+
+
+CONTENT_TYPES = {
+    "excel": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "csv": "text/csv",
+    "zip": "application/zip",
+    "shp": "application/zip",
+}
 
 
 class FormSubmissionsListView(ProjectValidationMixin, APIView):
@@ -273,3 +285,262 @@ class SubmissionSpecificRepeatDataView(ProjectValidationMixin, APIView):
                 {"error": "Unable to get repeat data", "detail": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+class SmartExcelExportView(ProjectValidationMixin, APIView):
+    """Export intelligent Excel multi-onglets avec labels et nettoyage."""
+
+    def get(self, request, project_id: int, form_id: str):
+        django_project, error_response = self.validate_project(project_id)
+        if error_response:
+            return error_response
+
+        remove_group_prefix_str = request.query_params.get(
+            "remove_group_prefix", "true"
+        )
+        remove_group_prefix = remove_group_prefix_str.lower() == "true"
+        include_labels_str = request.query_params.get("include_labels", "true")
+        include_labels = include_labels_str.lower() == "true"
+        include_choice_labels_str = request.query_params.get(
+            "include_choice_labels", "false"
+        )
+        include_choice_labels = include_choice_labels_str.lower() == "true"
+        language = request.query_params.get("language")
+
+        try:
+            with ODKCentralService(request.user, request=request) as service:
+                file_bytes, filename = service.export_smart_excel(
+                    django_project.odk_id,
+                    form_id,
+                    remove_group_prefix=remove_group_prefix,
+                    include_labels=include_labels,
+                    include_choice_labels=include_choice_labels,
+                    language=language,
+                )
+            response = FileResponse(
+                io.BytesIO(file_bytes),
+                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                as_attachment=True,
+                filename=filename,
+            )
+            return response
+        except Exception as e:
+            logger.error(f"Error generating smart Excel export: {e}")
+            return Response(
+                {"error": "Unable to generate smart Excel export", "detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class MediaZipExportView(ProjectValidationMixin, APIView):
+    """
+    Lance un export ZIP structuré (médias uniquement, sans CSV) de façon asynchrone.
+
+    POST /projects/{project_id}/forms/{form_id}/exports/zip-media/
+    → Crée un Export de type ZIP, lance la tâche Celery, retourne l'id pour polling.
+
+    Réponse 202 :
+        { "id": "<uuid>", "status": "pending" }
+
+    Polling : GET /exports/<id>/status/
+    Téléchargement : GET /exports/<id>/download/
+    """
+
+    def post(self, request, project_id: int, form_id: str):
+        project, error = self.validate_project(project_id)
+        if error:
+            return error
+        odk_project_id, error = self.validate_odk_association(project)
+        if error:
+            return error
+
+        export = Export.objects.create(
+            odk_project_id=odk_project_id,
+            form_id=form_id,
+            export_type=Export.ExportType.ZIP,
+            options={},  # pas d'options pour ce type d'export
+            created_by=request.user,
+        )
+
+        generate_export_task.delay(str(export.id))
+
+        return Response(
+            {"id": str(export.id), "status": export.status},
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+
+class ShapefileExportView(ProjectValidationMixin, APIView):
+    """
+    Lance un export Shapefile (Option 3 : Table / Type de géométrie) de façon asynchrone.
+
+    POST /projects/{project_id}/forms/{form_id}/exports/shapefile/
+    → Crée un Export de type SHP, lance la tâche Celery, retourne l'id pour polling.
+
+    Réponse 202 :
+        { "id": "<uuid>", "status": "pending" }
+
+    Polling : GET /exports/<id>/status/
+    Téléchargement : GET /exports/<id>/download/
+    Le fichier téléchargé est un ZIP contenant les dossiers Table/TypeGéom/fichiers.shp
+    """
+
+    def post(self, request, project_id: int, form_id: str):
+        project, error = self.validate_project(project_id)
+        if error:
+            return error
+        odk_project_id, error = self.validate_odk_association(project)
+        if error:
+            return error
+
+        export = Export.objects.create(
+            odk_project_id=odk_project_id,
+            form_id=form_id,
+            export_type=Export.ExportType.SHP,
+            options={},
+            created_by=request.user,
+        )
+
+        generate_export_task.delay(str(export.id))
+
+        return Response(
+            {"id": str(export.id), "status": export.status},
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+
+class GeoJSONUnifiedView(ProjectValidationMixin, APIView):
+    """
+    Retourne un FeatureCollection GeoJSON unifié (table principale + repeats).
+    GET /api/v1/odk/projects/{project_id}/forms/{form_id}/geodata/
+    """
+
+    def get(self, request, project_id: int, form_id: str):
+        from django.http import JsonResponse
+
+        project, error = self.validate_project(project_id)
+        if error:
+            return error
+        odk_project_id, error = self.validate_odk_association(project)
+        if error:
+            return error
+
+        try:
+            with ODKCentralService(request.user, request=request) as service:
+                geojson = service.get_geojson_unified(odk_project_id, form_id)
+            return JsonResponse(geojson, status=200)
+        except ODKValidationError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"GeoJSONUnifiedView error: {e}")
+            return Response(
+                {
+                    "error": "Impossible de récupérer les données géographiques",
+                    "detail": str(e),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class ExportStatusView(APIView):
+    def get(self, request, export_id: str):
+        try:
+            export = Export.objects.get(id=export_id, created_by=request.user)
+        except Export.DoesNotExist:
+            return Response(
+                {"error": "Export introuvable"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        data = {
+            "id": str(export.id),
+            "status": export.status,
+            "file_name": export.file_name,
+            "file_size": export.file_size,
+            "error_message": export.error_message if export.status == "error" else None,
+            "completed_at": (
+                export.completed_at.isoformat() if export.completed_at else None
+            ),
+        }
+        return Response(data)
+
+
+class ExportDownloadView(APIView):
+    def get(self, request, export_id: str):
+        try:
+            export = Export.objects.get(
+                id=export_id, created_by=request.user, status=Export.Status.READY
+            )
+        except Export.DoesNotExist:
+            return Response(
+                {"error": "Export prêt introuvable"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        content_type = CONTENT_TYPES.get(export.export_type, "application/octet-stream")
+
+        response = FileResponse(
+            BytesIO(export.file_data),
+            content_type=content_type,
+            as_attachment=True,
+            filename=export.file_name,
+        )
+        return response
+
+
+class ExportListCreateView(ProjectValidationMixin, APIView):
+    """Gestion des exports : liste et création asynchrone."""
+
+    def get(self, request, project_id: int, form_id: str):
+        project, error = self.validate_project(project_id)
+        if error:
+            return error
+        odk_project_id, error = self.validate_odk_association(project)
+        if error:
+            return error
+
+        exports = Export.objects.filter(
+            odk_project_id=odk_project_id, form_id=form_id, created_by=request.user
+        ).order_by("-created_at")
+
+        data = [
+            {
+                "id": str(e.id),
+                "export_type": e.export_type,
+                "status": e.status,
+                "file_name": e.file_name,
+                "file_size": e.file_size,
+                "created_at": e.created_at.isoformat() if e.created_at else None,
+                "completed_at": e.completed_at.isoformat() if e.completed_at else None,
+                "error_message": e.error_message if e.status == "error" else None,
+            }
+            for e in exports
+        ]
+        return Response(data)
+
+    def post(self, request, project_id: int, form_id: str):
+        project, error = self.validate_project(project_id)
+        if error:
+            return error
+        odk_project_id, error = self.validate_odk_association(project)
+        if error:
+            return error
+
+        export_type = request.data.get("export_type", "excel")
+        options = request.data.get("options", {})
+
+        export = Export.objects.create(
+            odk_project_id=odk_project_id,
+            form_id=form_id,
+            export_type=export_type,
+            options=options,
+            created_by=request.user,
+        )
+
+        generate_export_task.delay(str(export.id))
+
+        return Response(
+            {
+                "id": str(export.id),
+                "status": export.status,
+            },
+            status=status.HTTP_202_ACCEPTED,
+        )

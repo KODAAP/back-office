@@ -8,6 +8,9 @@ from core_apps.odk.views import (
     CreateListAccessView,
     EnketoFormPreviewView,
     EnketoSubmissionEditView,
+    ExportDownloadView,
+    ExportListCreateView,
+    ExportStatusView,
     FormCreateView,
     FormDeleteView,
     FormDetailView,
@@ -22,10 +25,14 @@ from core_apps.odk.views import (
     FormVersionXLSXDownloadView,
     FormVersionXMLView,
     FormXLSXDownloadView,
+    GeoJSONUnifiedView,
     MatrixView,
+    MediaZipExportView,
     ODKProjectListView,
     ProjectFormsListView,
     RevokeAccessLinkView,
+    ShapefileExportView,
+    SmartExcelExportView,
     SubmissionsDataView,
     SubmissionSpecificRepeatDataView,
     SubmissionsZipView,
@@ -88,6 +95,26 @@ urlpatterns = [
         "projects/<int:project_id>/forms/<str:form_id>/submissions.zip",
         SubmissionsZipView.as_view(),
         name="submissions-zip",
+    ),
+    path(
+        "projects/<int:project_id>/forms/<str:form_id>/exports/excel/",
+        SmartExcelExportView.as_view(),
+        name="smart-excel-export",
+    ),
+    path(
+        "projects/<int:project_id>/forms/<str:form_id>/exports/zip-media/",
+        MediaZipExportView.as_view(),
+        name="zip-media-export",
+    ),
+    path(
+        "projects/<int:project_id>/forms/<str:form_id>/exports/shapefile/",
+        ShapefileExportView.as_view(),
+        name="shapefile-export",
+    ),
+    path(
+        "projects/<int:project_id>/forms/<str:form_id>/geodata/",
+        GeoJSONUnifiedView.as_view(),
+        name="geojson-unified",
     ),
     path(
         "projects/<int:project_id>/forms/<str:form_id>/submissions.json",
@@ -190,5 +217,21 @@ urlpatterns = [
         "public-links/<str:token>/revoke/",
         RevokeAccessLinkView.as_view(),
         name="revoke-public-link",
+    ),
+    # Exports async
+    path(
+        "projects/<int:project_id>/forms/<str:form_id>/exports/",
+        ExportListCreateView.as_view(),
+        name="export-list-create",
+    ),
+    path(
+        "exports/<uuid:export_id>/status/",
+        ExportStatusView.as_view(),
+        name="export-status",
+    ),
+    path(
+        "exports/<uuid:export_id>/download/",
+        ExportDownloadView.as_view(),
+        name="export-download",
     ),
 ]
