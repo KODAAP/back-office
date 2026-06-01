@@ -1,6 +1,7 @@
 from .app_user_services import ODKAppUserService
 from .base_service import BaseODKService
 from .enketo_services import EnketoService
+from .export_services import ODKExportService
 from .form_services import ODKFormService
 
 # from .permissionServices import ODKPermissionMixin
@@ -16,6 +17,7 @@ class ODKCentralService(
     ODKAppUserService,
     ODKPublicAccessService,
     EnketoService,
+    ODKExportService,
 ):
 
     pass
@@ -31,4 +33,5 @@ __all__ = [
     # "ODKPermissionMixin",
     "ODKAppUserService",
     "ODKPublicAccessService",
+    "ODKExportService",
 ]

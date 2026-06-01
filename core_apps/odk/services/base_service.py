@@ -1,13 +1,16 @@
 import json
 import logging
+import os
+import tempfile
 import threading
 import time
 from datetime import timedelta
-from typing import Any
+from typing import Any, Dict, Optional
 
 from django.conf import settings
 from django.utils import timezone
 
+import pyxform.xls2json
 import requests
 
 from core_apps.common.utils import log_audit_action
@@ -284,12 +287,12 @@ class BaseODKService:
         )
 
     def _log_action(
-        self,
-        action: str,
-        resource_type: str,
-        resource_id: str | int,
-        details: dict,
-        success: bool = True,
+            self,
+            action: str,
+            resource_type: str,
+            resource_id: str | int,
+            details: dict,
+            success: bool = True,
     ) -> None:
         """
         Journalise une action dans le journal d'audit.
@@ -304,3 +307,56 @@ class BaseODKService:
             success=success,
             request=self.request,
         )
+
+    def _get_form_xlsx(self, project_id: int, form_id: str) -> bytes:
+        """Télécharge le fichier XLSX du formulaire depuis ODK Central."""
+        return self._make_request(
+            "GET",
+            f"projects/{project_id}/forms/{form_id}.xlsx",
+            return_json=False,
+        )
+
+    def _get_field_info(self, project_id: int, form_id: str) -> Dict[str, Dict[str, str]]:
+        """
+        Parse le XLSForm pour extraire le type et le label de chaque champ.
+        Retourne un dict: field_path -> {"type": "...", "label": "..."}
+        """
+        xlsx_bytes = self._get_form_xlsx(project_id, form_id)
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp:
+            tmp.write(xlsx_bytes)
+            tmp_path = tmp.name
+        try:
+            survey = pyxform.xls2json.parse_file_to_json(tmp_path)
+        finally:
+            os.unlink(tmp_path)
+
+        field_info: Dict[str, Dict[str, str]] = {}
+
+        def _extract_label(node_label, name: str) -> str:
+            if not node_label:
+                return name
+            if isinstance(node_label, list) and node_label:
+                # On prend le premier label par défaut (souvent fr ou en)
+                return node_label[0].get("#text", name)
+            if isinstance(node_label, dict):
+                return node_label.get("#text", name)
+            return str(node_label)
+
+        def recurse(node: Any, path: str = "") -> None:
+            node_type = node.get("type")
+            name = node.get("name", "")
+            full_path = f"{path}/{name}" if path and name else name
+            
+            label = _extract_label(node.get("label"), name)
+
+            if node_type and node_type != "survey" and name:
+                info = {"type": node_type, "label": label}
+                field_info[full_path] = info
+                field_info[name] = info
+
+            # Recurse into groups/repeats
+            for child in node.get("children", []):
+                recurse(child, full_path)
+
+        recurse(survey)
+        return field_info
