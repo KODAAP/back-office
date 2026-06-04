@@ -171,8 +171,24 @@ class SubmissionsDataView(ProjectValidationMixin, APIView):
                     )
 
                 expand = request.query_params.get("expand", "false").lower() == "true"
+                filter_param = request.query_params.get("$filter") or None
+                top_param = request.query_params.get("$top")
+                skip_param = request.query_params.get("$skip")
+                select_param = request.query_params.get("$select") or None
+
+                top = int(top_param) if top_param is not None else None
+                skip = int(skip_param) if skip_param is not None else None
+
                 data = SubmissionsDataView.clean_odk_keys(
-                    odk_service.submissions_data(odk_id, form_id, expand=expand)
+                    odk_service.submissions_data(
+                        odk_id,
+                        form_id,
+                        expand=expand,
+                        filter=filter_param,
+                        top=top,
+                        skip=skip,
+                        select=select_param,
+                    )
                 )
                 return Response(data, status=status.HTTP_200_OK)
         except Exception as e:
