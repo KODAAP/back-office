@@ -22,6 +22,7 @@ class FormCreateView(APIView):
         GenericJSONRenderer,
     ]
     object_label = "project_form"
+
     # permission_classes = [IsAuthenticated]
 
     def post(self, request, project_id):
@@ -87,13 +88,22 @@ class FormCreateView(APIView):
                         filename,
                         form_id=form_id,
                         ignore_warnings=ignore_warnings,
-                        publish=publish,
+                        publish=False,  # Always create as draft first to allow version override
                     )
+
+                    # If the user requested publication, publish it now with a guaranteed version
+                    if publish:
+                        xml_form_id = form.get("xmlFormId")
+                        version_to_publish = form.get("version") or "1.0"
+                        odk_service.publish_draft(
+                            odk_project_id, xml_form_id, version=version_to_publish
+                        )
+                        # Refresh form details to reflect published status
+                        form = odk_service.get_form(odk_project_id, xml_form_id)
+
                     ODKCacheManager.invalidate_project_cache(
                         request.user.id, odk_project_id
                     )
-                    # if not form.get("version"):
-                    #     form["version"] = "1.0"
                     return Response({"form": form}, status=status.HTTP_201_CREATED)
                 except ODKValidationError as e:
                     if created_new_odk_project:
@@ -148,6 +158,7 @@ class ProjectFormsListView(APIView):
         GenericJSONRenderer,
     ]
     object_label = "project_forms"
+
     # permission_classes = [IsAuthenticated]
 
     def get(self, request, project_id):
