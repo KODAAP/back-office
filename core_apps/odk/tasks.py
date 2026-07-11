@@ -24,12 +24,20 @@ def convert_excel_to_xform_task(file_content, file_name):
         raise Exception(f"Failed to convert Excel to XForm: {str(e)}") from e
 
 
-@shared_task(bind=True, max_retries=3)
+@shared_task(bind=True, max_retries=5)
 def generate_export_task(self, export_id: str):
     User = get_user_model()
 
+    # 1. Tentative de récupération de l'objet Export
     try:
         export = Export.objects.get(id=export_id)
+    except Export.DoesNotExist as exc:
+        # Si l'objet n'existe pas encore (transaction non terminée), on réessaie
+        logger.warning(f"Export {export_id} non trouvé, nouvelle tentative...")
+        raise self.retry(exc=exc, countdown=2)
+
+    # 2. Exécution du traitement de l'export
+    try:
         user = export.created_by
         options = export.options
 
@@ -54,6 +62,7 @@ def generate_export_task(self, export_id: str):
             else:
                 raise ValueError(f"Type d'export non supporté: {export.export_type}")
 
+        # Mise à jour de l'objet Export avec les données générées
         export.file_data = file_bytes
         export.file_name = filename
         export.file_size = len(file_bytes)
@@ -64,7 +73,10 @@ def generate_export_task(self, export_id: str):
         return {"status": "ready"}
 
     except Exception as exc:
+        # Ici on est sûr que 'export' existe car le premier try a réussi
         export.status = export.Status.ERROR
         export.error_message = str(exc)
         export.save()
+        logger.error(f"Erreur lors de la génération de l'export {export_id}: {exc}")
+        # On réessaie pour les erreurs temporaires (ex: timeout API ODK)
         raise self.retry(exc=exc, countdown=60)
