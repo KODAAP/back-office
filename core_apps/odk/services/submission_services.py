@@ -96,16 +96,37 @@ class ODKSubmissionService(BaseODKService):
             )
             raise
 
-    def submissions_data(self, project_id: int, form_id: str, expand: bool = False):
+    def submissions_data(
+        self,
+        project_id: int,
+        form_id: str,
+        expand: bool = False,
+        filter: Optional[str] = None,
+        top: Optional[int] = None,
+        skip: Optional[int] = None,
+        select: Optional[str] = None,
+    ):
         try:
             headers = {"content-type": "application/json"}
             url = f"projects/{project_id}/forms/{form_id}.svc/Submissions"
+
+            params = {}
             if expand:
-                url += "?$expand=*"
+                params["$expand"] = "*"
+            if filter:
+                params["$filter"] = filter
+            if top is not None:
+                params["$top"] = top
+            if skip is not None:
+                params["$skip"] = skip
+            if select:
+                params["$select"] = select
+
             return self._make_request(
                 "GET",
                 url,
                 headers=headers,
+                params=params if params else None,
             )
         except ODKValidationError:
             raise
