@@ -10,7 +10,9 @@ from pyxform.xls2xform import convert
 from core_apps.odk.services import ODKCentralService
 
 from .models import Export
+from logging import getLogger
 
+logger = getLogger(__name__)
 
 @shared_task
 def convert_excel_to_xform_task(file_content, file_name):
