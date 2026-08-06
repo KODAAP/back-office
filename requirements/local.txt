@@ -1,0 +1,21 @@
+-r base.txt
+
+flake8==6.1.0
+isort==5.12.0
+psycopg2-binary==2.9.9
+black==24.3.0
+pre-commit==3.6.0
+django-debug-toolbar==4.3.0
+pytest==7.4.4
+pytest-django==4.8.0
+pytest-cov==4.1.0
+ruff==0.1.13
+mypy==1.8.0
+django-stubs==4.2.7
+watchfiles==0.21.0
+
+# Documentation
+mkdocs>=1.5.0
+mkdocs-material>=9.5.0
+pymdown-extensions>=10.7.0
+mkdocstrings[python]>=0.24.0
