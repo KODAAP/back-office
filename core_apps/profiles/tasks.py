@@ -1,3 +1,4 @@
+import os
 from uuid import UUID
 
 from django.conf import settings
@@ -15,6 +16,17 @@ def upload_avatar_to_media(
 ) -> None:
     profile = Profile.objects.get(id=profile_id)
     storage = FileSystemStorage(location=settings.MEDIA_ROOT)
+
+    # Supprimer l'ancien avatar du disque s'il existe
+    # (et s'il ne s'agit pas de l'avatar par défaut)
+    if (
+        profile.avatar
+        and profile.avatar.name
+        and "default-avatar" not in profile.avatar.name
+    ):
+        old_avatar_path = profile.avatar.path
+        if os.path.isfile(old_avatar_path):
+            os.remove(old_avatar_path)
 
     # Utiliser la fonction avatar_upload_path pour générer le bon chemin
     filename = avatar_upload_path(profile, original_filename)
