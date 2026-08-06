@@ -43,7 +43,7 @@ class BaseODKService:
         self.django_user = django_user
         self.request = request
         self.base_url = getattr(
-            settings, "ODK_CENTRAL_URL", "https://odk.insuco.net/v1"
+            settings, "ODK_CENTRAL_URL", "https://test-odk.insuco.net/v1"
         )
 
         # Ces attributs sont gérés par le gestionnaire de contexte (`with`).
