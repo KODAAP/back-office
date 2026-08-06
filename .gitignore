@@ -15,15 +15,12 @@ staticfiles/
 .envs/.env.prod
 .envs/.env.prod.example
 secrets.json
-config/settings/local.py
-requirements/local.txt
 .idea/
-/docs/api.yaml
-/docs/database.md
 .vscode/
 *.egg-info/
 /credentials
 Makefile
 .todo
-odk-forms.md
 .jbeval/
+media/avatars/*
+!media/avatars/default-avatar.png
