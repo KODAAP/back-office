@@ -1,4 +1,4 @@
-Voici les permissions, extraites du document actuel ("Sycosur\_review\_20260216"), pour les rôles d'Admin, Project Manager et Utilisateur simple :
+Voici les permissions, extraites du document actuel ("Koda\_review\_20260216"), pour les rôles d'Admin, Project Manager et Utilisateur simple :
 
 ### **Permissions de l'Utilisateur simple**
 

@@ -1,6 +1,6 @@
 ### Aperçu du Système de Permissions
 
-Le projet Sycosur utilise **Django Guardian** pour une gestion fine des permissions au niveau objet (object-level permissions), combinée à des rôles ODK stockés dans le profil utilisateur (`odk_role`).
+Le projet Koda utilise **Django Guardian** pour une gestion fine des permissions au niveau objet (object-level permissions), combinée à des rôles ODK stockés dans le profil utilisateur (`odk_role`).
 
 - **Permissions globales** : Rôles `administrator` et `manager` bypassent les checks granulaires.
 - **Permissions objet** : Définies sur le modèle `Projects`, assignées par niveaux (`read`, `submit`, `contribute`, `manage`).

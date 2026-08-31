@@ -229,7 +229,7 @@ POST /api/invitations/accept/
 FRONTEND_URL = "http://localhost:8080"
 
 # Nom du site (utilisé dans les emails)
-SITE_NAME = "Sycosur"
+SITE_NAME = "Koda"
 
 # Email expéditeur
 DEFAULT_FROM_EMAIL = "noreply@example.com"
