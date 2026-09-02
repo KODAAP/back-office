@@ -24,3 +24,4 @@ Makefile
 .jbeval/
 media/avatars/*
 !media/avatars/default-avatar.png
+.github/env-mapping.md
