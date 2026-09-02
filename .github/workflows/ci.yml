@@ -11,9 +11,9 @@ jobs:
     name: Lint (Ruff)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@0b93645e5fea732b7c7b5b5463f20b32f143d46a # v5.3.0
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
@@ -45,9 +45,9 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@0b93645e5fea732b7c7b5b5463f20b32f143d46a # v5.3.0
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
