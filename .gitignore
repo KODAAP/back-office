@@ -22,6 +22,7 @@ secrets.json
 Makefile
 .todo
 .jbeval/
+.ruff_cache/
 media/avatars/*
 !media/avatars/default-avatar.png
 .github/env-mapping.md
