@@ -13,7 +13,7 @@ class Projects(TimeStampedModel):
     name = models.CharField(
         max_length=150, verbose_name="Project name", unique=True, null=False
     )
-    description = models.TextField(null=True, verbose_name="Description")
+    description = models.TextField(blank=True, verbose_name="Description", default="")
     deleted = models.BooleanField(default=False, verbose_name="Deleted", null=True)
     deleted_at = models.DateTimeField(null=True, verbose_name="Deleted at")
     archived = models.BooleanField(default=False, verbose_name="Archived", null=True)

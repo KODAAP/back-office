@@ -65,16 +65,17 @@ class EnketoService(BaseODKService):
         return response.json()
 
     def _make_enketo_request(self, method, endpoint, **kwargs):
-        """
-        Effectue une requête à l'API Enketo.
+        """Effectue une requête à l'API Enketo.
 
         Cette méthode gère l'authentification Basic, le logging et tente une
-        alternative d'URL en cas de 404 (pour certaines configurations Enketo Express).
+        alternative d'URL en cas de 404 (pour certaines configurations Enketo
+        Express).
 
         Args:
             method (str): Méthode HTTP (GET, POST, etc.).
             endpoint (str): Point de terminaison de l'API.
-            **kwargs: Arguments supplémentaires pour requests (data, params, headers, etc.).
+            **kwargs: Arguments supplémentaires pour requests (data, params,
+              headers, etc.).
 
         Returns:
             dict: Réponse de l'API Enketo désérialisée (JSON).
@@ -89,7 +90,7 @@ class EnketoService(BaseODKService):
         logger.info(f"Tentative Enketo API: {method} {url}")
 
         try:
-            # Si on envoie des données, on les logge (attention aux données sensibles si nécessaire)
+            # Si on envoie des données, on les logge
             if kwargs.get("data"):
                 logger.debug(f"Payload Enketo: {kwargs.get('data')}")
 
@@ -131,12 +132,12 @@ class EnketoService(BaseODKService):
             raise ODKValidationError(
                 f"Erreur Enketo sur {url}: {error_msg}",
                 status_code=e.response.status_code,
-            )
+            ) from e
         except requests.exceptions.ConnectionError as e:
             logger.error(f"Erreur de connexion à Enketo ({url}): {str(e)}")
             raise ODKValidationError(
                 f"Impossible de joindre le serveur Enketo sur {url}. Vérifiez l'hôte et le port."
-            )
+            ) from e
         except Exception as e:
             logger.error(
                 f"Erreur inattendue lors de l'appel à Enketo ({url}): {str(e)}"
@@ -155,7 +156,8 @@ class EnketoService(BaseODKService):
         """Méthode générique pour récupérer une URL Enketo via l'API.
 
         Args:
-            endpoint (str): Point de terminaison de l'API (ex: 'survey', 'instance/edit').
+            endpoint (str): Point de terminaison de l'API (ex: 'survey',
+              'instance/edit').
             server_url (str): URL du serveur ODK Central.
             form_id (str): Identifiant XML du formulaire.
             instance_id (str | None): Identifiant de la soumission.
@@ -197,8 +199,6 @@ class EnketoService(BaseODKService):
         url = re.sub(r"https?://[^/]+", self.public_base_url, url)
 
         # Injection du token de session ODK pour éviter la ré-authentification.
-        # Enketo transmet le paramètre `st` aux requêtes vers ODK Central
-        # grâce à la config "query parameter to pass to submission": "st".
         url = self._append_session_token(url)
 
         return url
@@ -206,17 +206,8 @@ class EnketoService(BaseODKService):
     def _append_session_token(self, url: str) -> str:
         """Ajoute le token de session ODK à l'URL Enketo.
 
-        Récupère le token Bearer stocké dans ODKUserSessions pour
-        l'utilisateur Django courant et l'ajoute en paramètre `st`.
-        Cela permet à l'utilisateur d'accéder directement au formulaire
-        Enketo sans ré-authentification sur ODK Central.
-
-        Args:
-            url: URL Enketo à enrichir.
-
-        Returns:
-            URL avec le paramètre `st` si un token valide existe,
-            URL inchangée sinon.
+        Récupère le token Bearer stocké dans ODKUserSessions pour l'utilisateur
+        Django courant et l'ajoute en paramètre `st`.
         """
         if not self.django_user:
             return url
@@ -244,15 +235,7 @@ class EnketoService(BaseODKService):
         local: bool = True,
         return_url: str | None = None,
     ) -> str:
-        """Génère un lien de modification Enketo pour une soumission.
-
-        Args:
-            project_id (int): Identifiant du projet ODK Central.
-            form_id (str): Identifiant XML du formulaire.
-            instance_id (str): Identifiant de la soumission.
-            local (bool): Si True, utilise l'Enketo local.
-            return_url (str | None): URL de redirection.
-        """
+        """Génère un lien de modification Enketo pour une soumission."""
         if local:
             return self.get_edit_url(
                 self.base_url,
@@ -261,17 +244,17 @@ class EnketoService(BaseODKService):
                 project_id=project_id,
                 return_url=return_url,
             )
-        else:
-            result = self._make_request(
-                "POST",
-                f"projects/{project_id}/forms/{form_id}/submissions/{instance_id}/edit",
+
+        result = self._make_request(
+            "POST",
+            f"projects/{project_id}/forms/{form_id}/submissions/{instance_id}/edit",
+        )
+        url = result.get("url")
+        if not url:
+            raise ODKValidationError(
+                f"ODK Central n'a pas retourné d'URL d'édition pour la soumission {instance_id}."
             )
-            url = result.get("url")
-            if not url:
-                raise ODKValidationError(
-                    f"ODK Central n'a pas retourné d'URL d'édition pour la soumission {instance_id}."
-                )
-            return url
+        return url
 
     def get_survey_link(
         self,
@@ -288,17 +271,17 @@ class EnketoService(BaseODKService):
                 project_id=project_id,
                 return_url=return_url,
             )
-        else:
-            result = self._make_request(
-                "POST",
-                f"projects/{project_id}/forms/{form_id}/survey",
+
+        result = self._make_request(
+            "POST",
+            f"projects/{project_id}/forms/{form_id}/survey",
+        )
+        url = result.get("url")
+        if not url:
+            raise ODKValidationError(
+                f"ODK Central n'a pas retourné d'URL de saisie pour le formulaire {form_id}."
             )
-            url = result.get("url")
-            if not url:
-                raise ODKValidationError(
-                    f"ODK Central n'a pas retourné d'URL de saisie pour le formulaire {form_id}."
-                )
-            return url
+        return url
 
     def get_preview_link(
         self,
@@ -313,17 +296,17 @@ class EnketoService(BaseODKService):
                 form_id,
                 project_id=project_id,
             )
-        else:
-            result = self._make_request(
-                "POST",
-                f"projects/{project_id}/forms/{form_id}/preview",
+
+        result = self._make_request(
+            "POST",
+            f"projects/{project_id}/forms/{form_id}/preview",
+        )
+        url = result.get("url")
+        if not url:
+            raise ODKValidationError(
+                f"ODK Central n'a pas retourné d'URL de prévisualisation pour le formulaire {form_id}."
             )
-            url = result.get("url")
-            if not url:
-                raise ODKValidationError(
-                    f"ODK Central n'a pas retourné d'URL de prévisualisation pour le formulaire {form_id}."
-                )
-            return url
+        return url
 
     def get_edit_url(
         self,

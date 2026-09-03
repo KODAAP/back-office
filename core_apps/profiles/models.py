@@ -13,7 +13,7 @@ User = get_user_model()
 
 def avatar_upload_path(instance, filename="photo"):
     """Génère le chemin pour l'avatar"""
-    return "avatars/{0}_{1}".format(instance.user.email, "photo")
+    return f"avatars/{instance.user.email}_photo"
 
 
 class Profile(TimeStampedModel):
@@ -32,10 +32,6 @@ class Profile(TimeStampedModel):
         )
 
     class ODKRole(models.TextChoices):
-        # DATA_COLLECTOR = (
-        #     "data_collector",
-        #     _("Data Collector"),
-        # )
         INSUCO_USER = (
             "insuco_user",
             _("Insuco User"),
@@ -64,7 +60,7 @@ class Profile(TimeStampedModel):
         choices=Gender.choices,
         default=Gender.OTHER,
     )
-    bio = models.TextField(verbose_name=_("Bio"), blank=True, null=True)
+    bio = models.TextField(verbose_name=_("Bio"), blank=True, default="")
     odk_role = models.CharField(
         verbose_name=_("ODK Role"),
         max_length=20,

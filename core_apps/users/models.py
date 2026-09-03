@@ -16,7 +16,7 @@ class User(AbstractUser):
         verbose_name=_("Email Address"), unique=True, db_index=True
     )
     username = models.CharField(
-        verbose_name=_("Username"), max_length=60, null=True, blank=True, default=None
+        verbose_name=_("Username"), max_length=60, blank=True, default=""
     )
 
     EMAIL_FIELD = "email"

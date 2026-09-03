@@ -1,10 +1,10 @@
 import logging
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def get_client_ip(request) -> Optional[str]:
+def get_client_ip(request) -> str | None:
     """Extract the client IP address from a Django request.
 
     It prioritizes the X-Forwarded-For header (first IP) when present
@@ -41,7 +41,6 @@ def log_audit_action(
     ip_address: str | None = None,
     raise_on_error: bool = False,
 ):
-
     try:
         # Local import to avoid potential circular imports at module load time
         from core_apps.common.models import AuditLogs

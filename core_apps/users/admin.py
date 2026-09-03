@@ -157,4 +157,4 @@ class UserAdmin(BaseUserAdmin):
     # filter user list by ODK role
 
     def get_inline_instances(self, request, obj=None):
-        return super(UserAdmin, self).get_inline_instances(request, obj) if obj else []
+        return super().get_inline_instances(request, obj) if obj else []
