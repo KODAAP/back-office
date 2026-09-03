@@ -23,8 +23,8 @@ jobs:
 
       - name: Lint & Format check
         run: |
-          ruff check .
-          ruff format --check .
+          ruff check . --extend-exclude "*.md"
+          ruff format --check . --extend-exclude "*.md"
 
   test:
     name: Tests Django
