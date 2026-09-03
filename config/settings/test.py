@@ -1,5 +1,4 @@
 from .common import *
-from .local import ADMIN_URL
 
 # Désactivation du mode debug pour les tests
 DEBUG = False
@@ -29,4 +28,3 @@ PASSWORD_HASHERS = [
 
 # Capturer les emails en mémoire au lieu d'essayer d'enoyer de vrais courriels
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
-ADMIN_URL = ADMIN_URL
