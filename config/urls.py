@@ -7,6 +7,8 @@ from rest_framework import permissions
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 
+admin_url = getattr(settings, "ADMIN_URL", None) or "admin/"
+
 schema_view = get_schema_view(
     openapi.Info(
         title=" Koda API",
@@ -25,7 +27,7 @@ urlpatterns = [
         schema_view.with_ui("redoc", cache_timeout=0),
         name="schema-redoc",
     ),
-    path(settings.ADMIN_URL, admin.site.urls),
+    path(admin_url, admin.site.urls),
     path("api/v1/auth/", include("djoser.urls")),
     path("api/v1/auth/", include("core_apps.users.urls")),
     path("api/v1/invitations/", include("core_apps.invitations.urls")),
