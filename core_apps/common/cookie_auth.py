@@ -1,9 +1,8 @@
 import logging
-from typing import Optional, Tuple
 
 from django.conf import settings
-
 from rest_framework.request import Request
+
 from rest_framework_simplejwt.authentication import AuthUser, JWTAuthentication
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import Token
@@ -22,7 +21,7 @@ class CookieAuthentication(JWTAuthentication):
     while maintaining security.
     """
 
-    def authenticate(self, request: Request) -> Optional[Tuple[AuthUser, Token]]:
+    def authenticate(self, request: Request) -> tuple[AuthUser, Token] | None:
         """
         Authenticate the request by checking for a valid JWT token.
 

@@ -4,14 +4,14 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.utils import timezone
-
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
-from guardian.shortcuts import get_objects_for_user
 from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from guardian.shortcuts import get_objects_for_user
 
 from core_apps.common.permissions import HasProjectPermission
 from core_apps.common.permissions_config import ADMIN_ROLES
@@ -26,7 +26,6 @@ from core_apps.projects.services import (
     revoke_project_permissions,
 )
 
-from ..profiles.views import StandardResultsSetPagination
 from .models import Projects
 from .serializers import (
     AssignProjectPermissionSerializer,

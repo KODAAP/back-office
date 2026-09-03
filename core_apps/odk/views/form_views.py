@@ -1,7 +1,6 @@
 import logging
 
 from django.http import HttpResponse
-
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -247,7 +246,6 @@ class FormDetailView(APIView):
 
 
 class FormDeleteView(APIView):
-
     def delete(self, request, project_id, form_id):
         """
         Handles the deletion of a specific ODK form. This includes checking the existence

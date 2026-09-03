@@ -1,5 +1,4 @@
 import logging
-from typing import Dict, List, Optional
 
 from .base_service import BaseODKService
 
@@ -17,7 +16,7 @@ class ODKPublicAccessService(BaseODKService):
     def __init__(self, django_user, request=None):
         super().__init__(django_user, request=request)
 
-    def _get_enketo_id(self, project_id: int, form_id: str) -> Optional[str]:
+    def _get_enketo_id(self, project_id: int, form_id: str) -> str | None:
         """Extract EnketoId retrieval logic"""
         form_data = self._make_request("GET", f"projects/{project_id}/forms/{form_id}")
         return form_data.get("enketoId")
@@ -28,20 +27,20 @@ class ODKPublicAccessService(BaseODKService):
         return f"{base_domain}{self.ENKETO_SINGLE_PATH}{enketo_id}?st={token}"
 
     def _enhance_link_with_url(
-        self, link_data: Dict, project_id: int, form_id: str
+        self, link_data: dict, project_id: int, form_id: str
     ) -> None:
         """Extract logic for adding public URL to link data"""
         if token := link_data.get("token"):
             if enketo_id := self._get_enketo_id(project_id, form_id):
                 link_data["public_url"] = self._build_public_url(enketo_id, token)
 
-    def _get_current_account_id(self) -> Optional[str]:
+    def _get_current_account_id(self) -> str | None:
         """Extract current account ID retrieval logic"""
         return self.current_account.get("id") if self.current_account else None
 
     def create_public_link(
         self, project_id: int, form_id: str, display_name: str, once: bool = False
-    ) -> Dict:
+    ) -> dict:
         """Create a new Public Access Link for a form"""
         payload = {"displayName": display_name, "once": once}
         link_data = self._make_request(
@@ -67,7 +66,7 @@ class ODKPublicAccessService(BaseODKService):
 
     def list_public_links(
         self, project_id: int, form_id: str, extended: bool = False
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """List all Public Access Links for a form"""
         headers = {self.EXTENDED_METADATA_HEADER: "true"} if extended else {}
         links_data = self._make_request(

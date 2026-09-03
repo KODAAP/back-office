@@ -59,6 +59,7 @@ __all__ = [
     "FormDeleteView",
     "FormRepeatListView",
     "FormSubmissionsListView",
+    "GeoJSONUnifiedView",
     "FormSubmissionsExportView",
     "FormSubmissionDetailView",
     "SubmissionSpecificRepeatDataView",

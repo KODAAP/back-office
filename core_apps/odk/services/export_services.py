@@ -3,7 +3,7 @@ import os
 import re
 import tempfile
 import zipfile
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import pandas as pd
 import pyxform.xls2json
@@ -12,13 +12,12 @@ from .base_service import BaseODKService
 
 
 class ODKExportService(BaseODKService):
-
     def _get_labels_and_choices(
         self,
         project_id: int,
         form_id: str,
-        language: Optional[str] = None,
-    ) -> Tuple[Dict[str, str], Dict[str, Dict[str, str]], Dict[str, str]]:
+        language: str | None = None,
+    ) -> tuple[dict[str, str], dict[str, dict[str, str]], dict[str, str]]:
         """
         Parse le XLSForm pour extraire:
         - labels: field name -> label
@@ -34,9 +33,9 @@ class ODKExportService(BaseODKService):
         finally:
             os.unlink(tmp_path)
 
-        labels: Dict[str, str] = {}
-        choices: Dict[str, Dict[str, str]] = {}
-        field_to_list: Dict[str, str] = {}
+        labels: dict[str, str] = {}
+        choices: dict[str, dict[str, str]] = {}
+        field_to_list: dict[str, str] = {}
 
         def _extract_label(node_label, name: str) -> str:
             """Helper to extract a label string from a node's label field."""
@@ -71,7 +70,7 @@ class ODKExportService(BaseODKService):
                 field_to_list[name] = list_name
                 field_to_list[full_name] = list_name
 
-                choice_map: Dict[str, str] = {}
+                choice_map: dict[str, str] = {}
                 for child in node.get("children", []):
                     ch_name = child.get("name")
                     ch_lbl = _extract_label(child.get("label"), ch_name)
@@ -98,8 +97,8 @@ class ODKExportService(BaseODKService):
         remove_group_prefix: bool = True,
         include_labels: bool = True,
         include_choice_labels: bool = False,
-        language: Optional[str] = None,
-    ) -> Tuple[bytes, str]:
+        language: str | None = None,
+    ) -> tuple[bytes, str]:
         """Export Excel multi-onglets : main + repeats, avec options labels/nettoyage/choix."""
         # Retrieve labels, choices, and field->list_name mapping
         labels, choices, field_to_list = self._get_labels_and_choices(
@@ -194,7 +193,7 @@ class ODKExportService(BaseODKService):
         self,
         project_id: int,
         form_id: str,
-    ) -> Tuple[bytes, str]:
+    ) -> tuple[bytes, str]:
         """
         US 10 — Export ZIP structuré contenant UNIQUEMENT les pièces jointes (sans CSV).
 
@@ -228,7 +227,7 @@ class ODKExportService(BaseODKService):
             # Index des médias disponibles dans le ZIP source :
             # { basename_du_fichier -> chemin_complet_dans_le_zip }
             # ODK Central stocke les médias dans un sous-dossier "media/" ou à la racine.
-            media_index: Dict[str, str] = {}
+            media_index: dict[str, str] = {}
             for entry in all_entries:
                 if not entry.endswith(".csv"):
                     basename = os.path.basename(entry)
@@ -319,7 +318,7 @@ class ODKExportService(BaseODKService):
         "geoshape": "polygon",
     }
 
-    def _detect_geo_columns(self, df: pd.DataFrame) -> Dict[str, str]:
+    def _detect_geo_columns(self, df: pd.DataFrame) -> dict[str, str]:
         """
         Détecte les colonnes géographiques dans un DataFrame ODK.
         ODK stocke les géométries sous forme de chaînes :
@@ -332,7 +331,7 @@ class ODKExportService(BaseODKService):
         geo_pattern = re.compile(
             r"^-?\d+\.?\d*\s+-?\d+\.?\d*(\s+-?\d+\.?\d*)?(\s+-?\d+\.?\d*)?"
         )
-        result: Dict[str, str] = {}
+        result: dict[str, str] = {}
 
         for col in df.columns:
             sample = df[col].dropna().astype(str).head(10)
@@ -399,13 +398,13 @@ class ODKExportService(BaseODKService):
 
     def _truncate_dbf_columns(
         self, df: pd.DataFrame
-    ) -> Tuple[pd.DataFrame, Dict[str, str]]:
+    ) -> tuple[pd.DataFrame, dict[str, str]]:
         """
         Tronque les noms de colonnes à 10 caractères (limite DBF).
         Retourne le DataFrame modifié + mapping {nom_tronqué: nom_original}.
         """
-        mapping: Dict[str, str] = {}
-        new_cols: List[str] = []
+        mapping: dict[str, str] = {}
+        new_cols: list[str] = []
         seen: set = set()
         for col in df.columns:
             truncated = col[:10]
@@ -427,7 +426,7 @@ class ODKExportService(BaseODKService):
         df: pd.DataFrame,
         geo_col: str,
         geo_type: str,
-        geo_cols_all: Dict[str, str],
+        geo_cols_all: dict[str, str],
     ):
         """
         Construit un GeoDataFrame pour une colonne géographique donnée.
@@ -461,12 +460,12 @@ class ODKExportService(BaseODKService):
         )
         return gdf, col_mapping
 
-    def _gdf_to_shp_bytes(self, gdf, layer_name: str) -> Dict[str, bytes]:
+    def _gdf_to_shp_bytes(self, gdf, layer_name: str) -> dict[str, bytes]:
         """
         Exporte un GeoDataFrame vers les fichiers Shapefile (.shp, .dbf, .prj, .cpg, .shx)
         et retourne un dict { "layer_name.ext": bytes }.
         """
-        result: Dict[str, bytes] = {}
+        result: dict[str, bytes] = {}
         with tempfile.TemporaryDirectory() as tmpdir:
             shp_path = os.path.join(tmpdir, f"{layer_name}.shp")
             gdf.to_file(shp_path, driver="ESRI Shapefile", encoding="utf-8")
@@ -481,7 +480,7 @@ class ODKExportService(BaseODKService):
         self,
         project_id: int,
         form_id: str,
-    ) -> Tuple[bytes, str]:
+    ) -> tuple[bytes, str]:
         """
         Structure produite dans le ZIP :
             {form_id}_shapefile.zip
@@ -510,7 +509,7 @@ class ODKExportService(BaseODKService):
         # 1. Télécharger le ZIP ODK (sans pièces jointes pour alléger)
         zip_content = self.zip_submissions(project_id, form_id)
 
-        readme_lines: List[str] = [
+        readme_lines: list[str] = [
             f"Export Shapefile — Formulaire : {form_id}",
             "Projection : WGS84 (EPSG:4326)",
             "Encodage : UTF-8",
@@ -518,7 +517,7 @@ class ODKExportService(BaseODKService):
             "",
             "Couches disponibles :",
         ]
-        truncation_notes: List[str] = []
+        truncation_notes: list[str] = []
 
         output = io.BytesIO()
 

@@ -3,7 +3,6 @@ import logging
 from io import BytesIO
 
 from django.http import FileResponse, HttpResponse
-
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -143,7 +142,6 @@ class FormSubmissionDetailView(ProjectValidationMixin, APIView):
 
 
 class SubmissionsDataView(ProjectValidationMixin, APIView):
-
     @staticmethod
     def clean_odk_keys(obj):
         if isinstance(obj, dict):
@@ -200,7 +198,6 @@ class SubmissionsDataView(ProjectValidationMixin, APIView):
 
 
 class SubmissionsZipView(ProjectValidationMixin, APIView):
-
     def get(self, request, project_id, form_id):
         project, error_response = self.validate_project(project_id)
         if error_response:
@@ -228,7 +225,6 @@ class SubmissionsZipView(ProjectValidationMixin, APIView):
 
 
 class FormRepeatListView(ProjectValidationMixin, APIView):
-
     def get(self, request, project_id, form_id):
         """Retrieve list of repeats (tables) for a specific form"""
         django_project, error_response = self.validate_project(project_id)
@@ -271,7 +267,6 @@ class FormRepeatListView(ProjectValidationMixin, APIView):
 
 
 class SubmissionSpecificRepeatDataView(ProjectValidationMixin, APIView):
-
     def get(self, request, project_id, form_id, instance_id, repeat_name):
         """Retrieve repeat data for a specific submission instance"""
         project, error_response = self.validate_project(project_id)

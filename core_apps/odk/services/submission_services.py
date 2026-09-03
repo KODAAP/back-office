@@ -1,5 +1,4 @@
 import logging
-from typing import Dict, List, Optional
 
 from .base_service import BaseODKService
 from .exceptions import ODKValidationError
@@ -10,7 +9,7 @@ logger = logging.getLogger(__name__)
 class ODKSubmissionService(BaseODKService):
     """Service pour la gestion des soumissions ODK"""
 
-    def get_form_submissions(self, project_id: int, form_id: str) -> List[Dict]:
+    def get_form_submissions(self, project_id: int, form_id: str) -> list[dict]:
         """Récupère les soumissions d'un formulaire spécifique, juste les metadata des soumissions"""
         try:
             return self._make_request(
@@ -33,7 +32,7 @@ class ODKSubmissionService(BaseODKService):
             )
             raise
 
-    def get_submission(self, project_id: int, form_id: str, instance_id: str) -> Dict:
+    def get_submission(self, project_id: int, form_id: str, instance_id: str) -> dict:
         """Récupère une soumission spécifique"""
         try:
             return self._make_request(
@@ -101,10 +100,10 @@ class ODKSubmissionService(BaseODKService):
         project_id: int,
         form_id: str,
         expand: bool = False,
-        filter: Optional[str] = None,
-        top: Optional[int] = None,
-        skip: Optional[int] = None,
-        select: Optional[str] = None,
+        filter: str | None = None,
+        top: int | None = None,
+        skip: int | None = None,
+        select: str | None = None,
     ):
         try:
             headers = {"content-type": "application/json"}
@@ -193,7 +192,7 @@ class ODKSubmissionService(BaseODKService):
         except ODKValidationError:
             raise
 
-    def get_submissions_geojson(self, project_id: int, form_id: str) -> Dict:
+    def get_submissions_geojson(self, project_id: int, form_id: str) -> dict:
         """
         Étape 2 — Récupère le GeoJSON natif ODK pour la table principale.
         Endpoint : GET /v1/projects/{projectId}/forms/{xmlFormId}/submissions.geojson
@@ -221,14 +220,14 @@ class ODKSubmissionService(BaseODKService):
             )
             raise
 
-    def get_geojson_unified(self, project_id: int, form_id: str) -> Dict:
+    def get_geojson_unified(self, project_id: int, form_id: str) -> dict:
         """
         Construit un FeatureCollection GeoJSON unifié (table principale + repeats).
         Utilise le schéma du formulaire et une extraction récursive pour les groupes imbriqués.
         """
         features = []
         tables_used = []
-        GEO_TYPES = {"geopoint", "geotrace", "geoshape"}
+        geo_types = {"geopoint", "geotrace", "geoshape"}
 
         # --- Étape 1 : Récupérer le schéma du formulaire ---
         try:
@@ -269,7 +268,7 @@ class ODKSubmissionService(BaseODKService):
                 f_type = info.get("type")
                 f_label = info.get("label", k)
 
-                is_geo = f_type in GEO_TYPES or any(gk in k.lower() for gk in GEO_TYPES)
+                is_geo = f_type in geo_types or any(gk in k.lower() for gk in geo_types)
 
                 if isinstance(v, dict):
                     # Si c'est déjà un objet géo (OData GeoJSON)
@@ -310,7 +309,7 @@ class ODKSubmissionService(BaseODKService):
 
                     # Propriétés de base communes à tous les points de cette ligne
                     base_properties = {
-                        k: v for k, v in row.items() if not isinstance(v, (dict, list))
+                        k: v for k, v in row.items() if not isinstance(v, dict | list)
                     }
                     base_properties["source_table"] = source_label
                     base_properties["submission_id"] = row.get(
@@ -351,7 +350,7 @@ class ODKSubmissionService(BaseODKService):
             },
         }
 
-    def _odata_geo_to_geojson(self, value) -> Optional[Dict]:
+    def _odata_geo_to_geojson(self, value) -> dict | None:
         """
         Convertit une valeur géographique ODK (OData ou chaîne brute) en objet geometry GeoJSON.
         Formats supportés :

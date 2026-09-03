@@ -1,6 +1,5 @@
 import os
 
-from django.core.files.storage import FileSystemStorage
 from django.core.files.temp import NamedTemporaryFile
 
 import requests

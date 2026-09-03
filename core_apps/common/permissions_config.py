@@ -1,7 +1,5 @@
-from typing import Dict, Set
-
 # Mapping hiérarchique des niveaux de permissions
-PERMISSION_SETS: Dict[str, Set[str]] = {
+PERMISSION_SETS: dict[str, set[str]] = {
     # "read": {"access_project", "view_form", "view_submission"},
     # "submit": {"access_project", "view_form", "view_submission", "add_submission"},
     "contribute": {

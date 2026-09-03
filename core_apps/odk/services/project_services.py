@@ -1,5 +1,4 @@
 import logging
-from typing import Dict, List
 
 from django.utils import timezone
 
@@ -62,7 +61,7 @@ class ODKProjectService(BaseODKService):
             )
             raise
 
-    def get_projects(self) -> List[Dict]:
+    def get_projects(self) -> list[dict]:
         """Récupère tous les projets depuis ODK Central"""
         try:
             projects = self._make_request("GET", "projects")
@@ -82,7 +81,7 @@ class ODKProjectService(BaseODKService):
             )
             raise
 
-    def get_project(self, project_id: int) -> Dict:
+    def get_project(self, project_id: int) -> dict:
         """Récupère un projet spécifique depuis ODK Central"""
         try:
             project = self._make_request("GET", f"projects/{project_id}")
@@ -133,7 +132,7 @@ class ODKProjectService(BaseODKService):
             )
             raise
 
-    def create_project(self, name: str, description: str = "") -> Dict:
+    def create_project(self, name: str, description: str = "") -> dict:
         """Create a new project in ODK Central"""
         try:
             project_data = {

@@ -1,5 +1,4 @@
 import logging
-from typing import Dict, List
 
 from .base_service import BaseODKService
 from .exceptions import ODKValidationError
@@ -13,7 +12,7 @@ class ODKFormService(BaseODKService):
     def __init__(self, django_user, request=None):
         super().__init__(django_user, request=request)
 
-    def get_project_forms(self, project_id: int) -> List[Dict]:
+    def get_project_forms(self, project_id: int) -> list[dict]:
         """Retrieve forms for a specific project"""
         try:
             return self._make_request("GET", f"projects/{project_id}/forms")
@@ -32,7 +31,7 @@ class ODKFormService(BaseODKService):
             )
             raise
 
-    def get_form(self, project_id: int, form_id: str) -> Dict:
+    def get_form(self, project_id: int, form_id: str) -> dict:
         """Retrieve a specific form"""
         try:
             return self._make_request("GET", f"projects/{project_id}/forms/{form_id}")
@@ -84,7 +83,6 @@ class ODKFormService(BaseODKService):
         ignore_warnings=False,
         publish=False,
     ) -> dict:
-
         try:
             # Determine Content-Type based on extension
             if filename.endswith(".xlsx"):
@@ -139,7 +137,7 @@ class ODKFormService(BaseODKService):
             )
             raise
 
-    def delete_form(self, project_id: int, form_id: str) -> Dict:
+    def delete_form(self, project_id: int, form_id: str) -> dict:
         """Delete a specific form (move to trash)"""
         try:
             result = self._make_request(
@@ -173,7 +171,7 @@ class ODKFormService(BaseODKService):
     # MVP SERVICES FOR DRAFT MANAGEMENT
     # ================================
 
-    def get_form_draft(self, project_id: int, form_id: str) -> Dict:
+    def get_form_draft(self, project_id: int, form_id: str) -> dict:
         """Retrieve form draft details"""
         try:
             draft_data = self._make_request(
@@ -206,7 +204,7 @@ class ODKFormService(BaseODKService):
         form_data,
         filename: str,
         ignore_warnings: bool = True,
-    ) -> Dict:
+    ) -> dict:
         """Create or update a form draft"""
         try:
             # Determine Content-Type based on extension
@@ -290,7 +288,7 @@ class ODKFormService(BaseODKService):
             )
             raise
 
-    def delete_draft(self, project_id: int, form_id: str) -> Dict:
+    def delete_draft(self, project_id: int, form_id: str) -> dict:
         """Delete a form draft"""
         try:
             result = self._make_request(
@@ -321,7 +319,7 @@ class ODKFormService(BaseODKService):
             )
             raise
 
-    def get_draft_submissions(self, project_id: int, form_id: str) -> List[Dict]:
+    def get_draft_submissions(self, project_id: int, form_id: str) -> list[dict]:
         """Get test submissions for a draft"""
         try:
             return self._make_request(
@@ -342,7 +340,7 @@ class ODKFormService(BaseODKService):
             )
             raise
 
-    def get_form_versions(self, project_id: int, form_id: str) -> List[Dict]:
+    def get_form_versions(self, project_id: int, form_id: str) -> list[dict]:
         """Get all published versions of a form"""
         try:
             versions = self._make_request(

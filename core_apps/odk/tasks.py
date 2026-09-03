@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as xEt
 from io import BytesIO
+from logging import getLogger
 
-from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from celery import shared_task
@@ -10,9 +10,9 @@ from pyxform.xls2xform import convert
 from core_apps.odk.services import ODKCentralService
 
 from .models import Export
-from logging import getLogger
 
 logger = getLogger(__name__)
+
 
 @shared_task
 def convert_excel_to_xform_task(file_content, file_name):
@@ -28,15 +28,13 @@ def convert_excel_to_xform_task(file_content, file_name):
 
 @shared_task(bind=True, max_retries=5)
 def generate_export_task(self, export_id: str):
-    User = get_user_model()
-
     # 1. Tentative de récupération de l'objet Export
     try:
         export = Export.objects.get(id=export_id)
     except Export.DoesNotExist as exc:
         # Si l'objet n'existe pas encore (transaction non terminée), on réessaie
         logger.warning(f"Export {export_id} non trouvé, nouvelle tentative...")
-        raise self.retry(exc=exc, countdown=2)
+        raise self.retry(exc=exc, countdown=2) from exc
 
     # 2. Exécution du traitement de l'export
     try:
@@ -81,4 +79,4 @@ def generate_export_task(self, export_id: str):
         export.save()
         logger.error(f"Erreur lors de la génération de l'export {export_id}: {exc}")
         # On réessaie pour les erreurs temporaires (ex: timeout API ODK)
-        raise self.retry(exc=exc, countdown=60)
+        raise self.retry(exc=exc, countdown=60) from exc

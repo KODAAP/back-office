@@ -1,5 +1,4 @@
 import logging
-from typing import Dict
 
 from .base_service import BaseODKService
 from .exceptions import ODKValidationError
@@ -36,7 +35,7 @@ class ODKAppUserService(BaseODKService):
             )
             raise
 
-    def create_app_user(self, project_id: int, display_name: str) -> Dict:
+    def create_app_user(self, project_id: int, display_name: str) -> dict:
         """Crée un nouvel utilisateur d'application pour un projet"""
         try:
             payload = {"displayName": display_name}

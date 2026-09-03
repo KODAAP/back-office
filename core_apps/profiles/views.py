@@ -1,13 +1,12 @@
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 from django.http import Http404
-
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, status
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from django_filters.rest_framework import DjangoFilterBackend
 
 from core_apps.common.permissions import CanChangeODKRole
 from core_apps.common.renderers import GenericJSONRenderer
@@ -108,7 +107,7 @@ class ProfileRoleUpdateAPIView(APIView):
         try:
             profile = Profile.objects.get(user__pkid=pkid)
         except Profile.DoesNotExist:
-            raise Http404("Profile for this user not found")
+            raise Http404("Profile for this user not found") from None
 
         serializer = RoleUpdateSerializer(profile, data=request.data, partial=True)
         if serializer.is_valid():

@@ -1,5 +1,4 @@
 from django.utils import timezone
-
 from rest_framework import serializers
 
 from core_apps.invitations.models import UserInvitation

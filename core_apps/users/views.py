@@ -1,17 +1,16 @@
 import logging
 from datetime import timedelta
-from typing import Optional
 
 from django.conf import settings
 from django.core.mail import send_mail
 from django.utils import timezone
-
-from djoser.social.views import ProviderAuthView
 from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from djoser.social.views import ProviderAuthView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from core_apps.common.permissions import CanChangeODKRole
@@ -45,7 +44,7 @@ def send_welcome_email(user):
 
 
 def set_auth_cookies(
-    response: Response, access_token: str, refresh_token: Optional[str] = None
+    response: Response, access_token: str, refresh_token: str | None = None
 ) -> None:
     access_token_lifetime = settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds()
     cookie_settings = {
@@ -132,7 +131,6 @@ class CustomTokenRefreshView(TokenRefreshView):
 
 
 class CustomProviderAuthView(ProviderAuthView):
-
     def post(self, request: Request, *args, **kwargs) -> Response:
         provider_res = super().post(request, *args, **kwargs)
 

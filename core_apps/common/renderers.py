@@ -1,8 +1,7 @@
 import json
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 from django.utils.translation import gettext_lazy as _
-
 from rest_framework.renderers import JSONRenderer
 
 
@@ -27,9 +26,9 @@ class GenericJSONRenderer(JSONRenderer):
     def render(
         self,
         data: Any,
-        accepted_media_type: Optional[str] = None,
-        renderer_context: Optional[Dict] = None,
-    ) -> Union[bytes, str]:
+        accepted_media_type: str | None = None,
+        renderer_context: dict | None = None,
+    ) -> bytes | str:
         """
         Render the data into a standardized format.
 
@@ -70,7 +69,8 @@ class GenericJSONRenderer(JSONRenderer):
         # This preserves the error format from DRF
         errors = data.get("errors", None) if isinstance(data, dict) else None
         if errors is not None:
-            return super(GenericJSONRenderer, self).render(data)
+            # return super(GenericJSONRenderer, self).render(data)
+            return super().render(data)
 
         # TODO: uncomment this and remove results key from list responses
         if isinstance(data, list):

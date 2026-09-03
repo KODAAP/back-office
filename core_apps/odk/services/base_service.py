@@ -5,7 +5,7 @@ import tempfile
 import threading
 import time
 from datetime import timedelta
-from typing import Any, Dict, Optional
+from typing import Any
 
 from django.conf import settings
 from django.utils import timezone
@@ -318,7 +318,7 @@ class BaseODKService:
 
     def _get_field_info(
         self, project_id: int, form_id: str
-    ) -> Dict[str, Dict[str, str]]:
+    ) -> dict[str, dict[str, str]]:
         """
         Parse le XLSForm pour extraire le type et le label de chaque champ.
         Retourne un dict: field_path -> {"type": "...", "label": "..."}
@@ -332,7 +332,7 @@ class BaseODKService:
         finally:
             os.unlink(tmp_path)
 
-        field_info: Dict[str, Dict[str, str]] = {}
+        field_info: dict[str, dict[str, str]] = {}
 
         def _extract_label(node_label, name: str) -> str:
             if not node_label:
