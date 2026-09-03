@@ -1,24 +1,30 @@
-import environ
+from .common import *
 
-from .common import *  # Récupère toute la configuration principale
-
-env = environ.Env()
-
+# Désactivation du mode debug pour les tests
 DEBUG = False
-SECRET_KEY = env(
+
+# Clé secrète de secours si non définie dans l'environnement
+SECRET_KEY = getenv(
     "DJANGO_SECRET_KEY",
-    default="django-insecure-test-key-only-for-ci-and-testing-purposes",
+    "django-insecure-test-key-only-for-ci-and-testing-purposes",
 )
 
+# Configuration de la base PostgreSQL de test
 DATABASES = {
-    "default": env.db(
-        "DATABASE_URL",
-        default="postgres://test_user:test_pass@localhost:5432/test_kodaap",
-    )
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": getenv("POSTGRES_DB", "test_kodaap"),
+        "USER": getenv("POSTGRES_USER", "test_user"),
+        "PASSWORD": getenv("POSTGRES_PASSWORD", "test_pass"),
+        "HOST": getenv("POSTGRES_HOST", "localhost"),
+        "PORT": getenv("POSTGRES_PORT", "5432"),
+    }
 }
 
+# Algorithme de hachage ultra-rapide pour accélérer l'exécution des tests
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",
 ]
 
+# Capturer les emails en mémoire au lieu d'essayer d'enoyer de vrais courriels
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
