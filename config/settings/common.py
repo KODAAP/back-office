@@ -14,6 +14,7 @@ APPS_DIR = BASE_DIR / "core_apps"
 if path.isfile(CUR_ENV_FILE):
     load_dotenv(CUR_ENV_FILE)
 
+ADMIN_URL = getenv("DJANGO_ADMIN_URL")
 
 # Application definition
 

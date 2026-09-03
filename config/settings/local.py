@@ -27,7 +27,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://odk.insuco.net",
 ]
 
-ADMIN_URL = getenv("DJANGO_ADMIN_URL")
+
 EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
 EMAIL_HOST = getenv("EMAIL_HOST")
 EMAIL_PORT = getenv("EMAIL_PORT")
