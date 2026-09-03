@@ -19,7 +19,6 @@ class ODKCentralService(
     EnketoService,
     ODKExportService,
 ):
-
     pass
 
 
